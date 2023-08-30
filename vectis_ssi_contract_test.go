@@ -12,6 +12,9 @@ import (
 )
 
 func TestSSIContract(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	t.Cleanup(func() {

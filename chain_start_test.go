@@ -8,9 +8,6 @@ import (
 )
 
 func TestBasicJunoStart(t *testing.T) {
-	if testing.Short() {
-		t.Skip()
-	}
 
 	t.Parallel()
 

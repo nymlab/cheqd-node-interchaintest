@@ -2,7 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	"fmt"
+	//"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -67,54 +67,64 @@ func CreateChain(
 	genesisOverrides ...cosmos.GenesisKV,
 ) (*interchaintest.Interchain, *cosmos.CosmosChain) {
 
-	junoConfig := ibc.ChainConfig{
-		Type:                   "cosmos",
-		Name:                   "juno",
-		ChainID:                "juno-2",
-		Images:                 []ibc.DockerImage{JunoImage},
-		Bin:                    "junod",
-		Bech32Prefix:           "juno",
-		Denom:                  Denom,
-		CoinType:               "118",
-		GasPrices:              fmt.Sprintf("0%s", Denom),
-		GasAdjustment:          2.0,
-		TrustingPeriod:         "112h",
-		NoHostMount:            false,
-		ConfigFileOverrides:    nil,
-		EncodingConfig:         junoEncoding(),
-		UsingNewGenesisCommand: true,
-		ModifyGenesis:          cosmos.ModifyGenesis(defaultGenesisKV),
+	//junoConfig := ibc.ChainConfig{
+	//	Type:                   "cosmos",
+	//	Name:                   "juno",
+	//	ChainID:                "juno-2",
+	//	Images:                 []ibc.DockerImage{JunoImage},
+	//	Bin:                    "junod",
+	//	Bech32Prefix:           "juno",
+	//	Denom:                  Denom,
+	//	CoinType:               "118",
+	//	GasPrices:              fmt.Sprintf("0%s", Denom),
+	//	GasAdjustment:          2.0,
+	//	TrustingPeriod:         "112h",
+	//	NoHostMount:            false,
+	//	ConfigFileOverrides:    nil,
+	//	EncodingConfig:         junoEncoding(),
+	//	UsingNewGenesisCommand: true,
+	//	ModifyGenesis:          cosmos.ModifyGenesis(defaultGenesisKV),
+	//}
+
+	cheqdConfig := ibc.ChainConfig{
+		Type:    "cosmos",
+		Name:    "cheqd",
+		ChainID: "cheqd-mainnet-1",
+		Images: []ibc.DockerImage{
+			{
+				Repository: "ghcr.io/nymlab/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    "prop31",               // FOR LOCAL IMAGE USE: Docker Image Tag
+				UidGid:     "1025:1025",
+			},
+		},
+		Bin:                 "cheqd-noded",
+		Bech32Prefix:        "cheqd",
+		Denom:               "ncheq",
+		CoinType:            "118",
+		GasPrices:           "50ncheq",
+		GasAdjustment:       1.3,
+		TrustingPeriod:      "508h",
+		NoHostMount:         false,
+		ConfigFileOverrides: nil,
 	}
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
+		//{
+		//	Name:          "juno",
+		//	ChainName:     "juno",
+		//	Version:       "v16.0.0",
+		//	ChainConfig:   junoConfig,
+		//	NumValidators: &numVals,
+		//	NumFullNodes:  &numFull,
+		//},
 		{
-			Name:          "juno",
-			ChainName:     "juno",
-			Version:       "v16.0.0",
-			ChainConfig:   junoConfig,
+			Name:          "cheqd",
+			ChainName:     "cheqd",
+			Version:       "prop31",
+			ChainConfig:   cheqdConfig,
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
 		},
-
-		//{ChainConfig: ibc.ChainConfig{
-		//	Type:    "cosmos",
-		//	Name:    "cheqd",
-		//	ChainID: "cheqd-mainnet-1",
-		//	Images: []ibc.DockerImage{
-		//		{
-		//			Repository: "ghcr.io/cheqd/cheqd-node",                     // FOR LOCAL IMAGE USE: Docker Image Name
-		//			Version:    "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", // FOR LOCAL IMAGE USE: Docker Image Tag
-		//		},
-		//	},
-		//	Bin:            "cheqd-noded",
-		//	Bech32Prefix:   "cheqd",
-		//	Denom:          "ncheq",
-		//	GasPrices:      "50ncheq",
-		//	GasAdjustment:  1.3,
-		//	TrustingPeriod: "508h",
-		//	NoHostMount:    false},
-		//},
-		// Works
 	})
 
 	chains, err := cf.Chains(t.Name())
