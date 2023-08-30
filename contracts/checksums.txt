@@ -1,0 +1,1 @@
+96471eea8b212886c299dda00e8afa172f0f33d0753e64db573519b34a46384e  vectis_anoncreds_verifier.wasm
