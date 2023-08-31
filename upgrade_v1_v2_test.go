@@ -26,7 +26,8 @@ const (
 )
 
 func TestCheqdUpgradeIBC(t *testing.T) {
-	CosmosChainUpgradeIBCTest(t, "cheqd", "v1.4.4-heighliner", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1-heighliner", "v2")
+	//CosmosChainUpgradeIBCTest(t, "cheqd", "v1.4.4-heighliner", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1-heighliner", "v2")
+	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1", "v2")
 }
 
 func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {
@@ -91,7 +92,8 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	haltHeight := height + haltHeightDelta
 
 	urlMap := make(plan.BinaryDownloadURLMap)
-	urlMap["darwin/amd64"] = "https://v1.cosmos.network/sdk?checksum=sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259"
+	// use a small file
+	urlMap["darwin/amd64"] = "https://github.com/cheqd/did-resolver/releases/download/v3.5.1/did-resolver-3.5.1-darwin-amd64.tar.gz?checksum=sha256:3408e2a65fd1ccb57eee19ff8f42d6c50cc4876fbe91537864be2a335a9fa9dd"
 
 	upgradeInfo := plan.Info{
 		Binaries: urlMap,
@@ -141,6 +143,9 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 
 	// upgrade version on all nodes
 	chain.UpgradeVersion(ctx, client, upgradeVersion)
+	//
+
+	// got to here
 
 	// start all nodes back up.
 	// validators reach consensus on first block after upgrade height

@@ -2,10 +2,10 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	"testing"
 	"encoding/json"
 	"fmt"
 	"github.com/icza/dyno"
+	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -68,7 +68,10 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 			{
 				Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
 				Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
-				UidGid:     "1025:1025",
+				UidGid:     "1000:1000",
+				//Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				//Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
+				//UidGid:     "1025:1025",
 			},
 		},
 		Bin:                 "cheqd-noded",

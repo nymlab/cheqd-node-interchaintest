@@ -23,7 +23,7 @@ func TestBasicCheqdV1Start(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount := 1
 
-	ic, chain := CreateCheqdChain(t, ctx, validatorsCount, 0, "v1.4.4-heighliner")
+	ic, chain := CreateCheqdChain(t, ctx, validatorsCount, 0, "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24")
 	require.NotNil(t, ic)
 	require.NotNil(t, chain)
 
@@ -33,7 +33,6 @@ func TestBasicCheqdV1Start(t *testing.T) {
 }
 
 func TestBasicCheqdV2Start(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -48,7 +47,7 @@ func TestBasicCheqdV2Start(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount := 1
 
-	ic, chain := CreateCheqdChain(t, ctx, validatorsCount, 0, "v2.0.0-rc1-heighliner")
+	ic, chain := CreateCheqdChain(t, ctx, validatorsCount, 0, "v2.0.0-rc1")
 	require.NotNil(t, ic)
 	require.NotNil(t, chain)
 
