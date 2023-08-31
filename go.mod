@@ -3,24 +3,25 @@ module github.com/cheqd/interchaintest
 go 1.18
 
 replace (
+	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
+	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
 	github.com/cosmos/cosmos-sdk => github.com/cheqd/cosmos-sdk v0.46.10-barberry
 	// From Cosmos SDK v0.46.8 upstream
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/strangelove-ventures/interchaintest/v6 => ../../interchaintest
 	// use informal systems fork of tendermint
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
 
-replace github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
-
-replace github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
-
 require (
 	github.com/cheqd/cheqd-node v1.4.4
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/strangelove-ventures/interchaintest/v6 v6.0.0-20230131024613-0bdc194c2aa1
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
+
 )
 
 require (
@@ -115,7 +116,6 @@ require (
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.0.7 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect

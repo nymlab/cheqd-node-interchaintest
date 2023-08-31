@@ -2,8 +2,10 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	"fmt"
 	"testing"
+	"encoding/json"
+	"fmt"
+	"github.com/icza/dyno"
 
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -27,20 +29,45 @@ func cheqdEncoding() *simappparams.EncodingConfig {
 	return &cfg
 }
 
-func CreateChain(
-	t *testing.T,
-	ctx context.Context,
-	numVals, numFull int,
-) (*interchaintest.Interchain, *cosmos.CosmosChain) {
+const (
+	votingPeriod     = "10s"
+	maxDepositPeriod = "10s"
+)
 
-	cheqdConfig := ibc.ChainConfig{
+func ModifyGenesisShortProposals(votingPeriod string, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
+	return func(chainConfig ibc.ChainConfig, genbz []byte) ([]byte, error) {
+		g := make(map[string]interface{})
+		if err := json.Unmarshal(genbz, &g); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal genesis file: %w", err)
+		}
+		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "voting_params", "voting_period"); err != nil {
+			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
+		}
+		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "deposit_params", "max_deposit_period"); err != nil {
+			return nil, fmt.Errorf("failed to set max deposit period in genesis json: %w", err)
+		}
+		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "deposit_params", "min_deposit", 0, "denom"); err != nil {
+			return nil, fmt.Errorf("failed to set min deposit denom in genesis json: %w", err)
+		}
+		if err := dyno.Set(g, "100", "app_state", "gov", "deposit_params", "min_deposit", 0, "amount"); err != nil {
+			return nil, fmt.Errorf("failed to set min deposit amount in genesis json: %w", err)
+		}
+		out, err := json.Marshal(g)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal genesis bytes to json: %w", err)
+		}
+		return out, nil
+	}
+}
+func GetCheqdConfig(version string) ibc.ChainConfig {
+	return ibc.ChainConfig{
 		Type:    "cosmos",
 		Name:    "cheqd",
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "cheqd",   // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    "develop", // FOR LOCAL IMAGE USE: Docker Image Tag
+				Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
 				UidGid:     "1025:1025",
 			},
 		},
@@ -54,14 +81,23 @@ func CreateChain(
 		NoHostMount:         false,
 		ConfigFileOverrides: nil,
 		EncodingConfig:      cheqdEncoding(),
+		ModifyGenesis:       ModifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
 	}
+}
+
+func CreateCheqdChain(
+	t *testing.T,
+	ctx context.Context,
+	numVals, numFull int,
+	version string,
+) (*interchaintest.Interchain, *cosmos.CosmosChain) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "cheqd",
 			ChainName:     "cheqd",
-			Version:       "develop",
-			ChainConfig:   cheqdConfig,
+			Version:       version,
+			ChainConfig:   GetCheqdConfig(version),
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
 		},
@@ -84,7 +120,6 @@ func CreateChain(
 		},
 	)
 
-	fmt.Printf("error %s", err)
 	require.NoError(t, err)
 
 	return ic, chains[0].(*cosmos.CosmosChain)
