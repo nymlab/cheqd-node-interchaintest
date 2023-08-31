@@ -8,7 +8,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/cheqd/cosmos-sdk v0.46.10-barberry
 	// From Cosmos SDK v0.46.8 upstream
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/strangelove-ventures/interchaintest/v6 => ../../interchaintest
+	github.com/strangelove-ventures/interchaintest/v6 => github.com/nymlab/interchaintest/v6 v6.0.0-20230831193919-68e458d66541
 	// use informal systems fork of tendermint
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
