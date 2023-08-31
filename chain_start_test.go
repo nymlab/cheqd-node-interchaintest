@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBasicJunoStart(t *testing.T) {
+func TestBasicCheqdStart(t *testing.T) {
 
 	t.Parallel()
 

@@ -8,47 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	testutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
+	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	feesharetypes "github.com/CosmosContracts/juno/v16/x/feeshare/types"
-	tokenfactorytypes "github.com/CosmosContracts/juno/v16/x/tokenfactory/types"
 	didtypes "github.com/cheqd/cheqd-node/x/did/types"
 	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
-	ibclocalhost "github.com/cosmos/ibc-go/v7/modules/light-clients/09-localhost"
 )
 
-var (
-	VotingPeriod     = "15s"
-	MaxDepositPeriod = "10s"
-	Denom            = "ujuno"
-	JunoImage        = ibc.DockerImage{
-		Repository: "ghcr.io/strangelove-ventures/heighliner/juno",
-		Version:    "v16.0.0",
-		UidGid:     "1025:1025",
-	}
-	// SDK v47 Genesis
-	defaultGenesisKV = []cosmos.GenesisKV{
-		{
-			Key:   "app_state.gov.params.voting_period",
-			Value: VotingPeriod,
-		},
-		{
-			Key:   "app_state.gov.params.max_deposit_period",
-			Value: MaxDepositPeriod,
-		},
-		{
-			Key:   "app_state.gov.params.min_deposit.0.denom",
-			Value: Denom,
-		},
-	}
-)
-
-func cheqdEncoding() *testutil.TestEncodingConfig {
+func cheqdEncoding() *simappparams.EncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 
 	didtypes.RegisterInterfaces(cfg.InterfaceRegistry)
@@ -57,45 +27,11 @@ func cheqdEncoding() *testutil.TestEncodingConfig {
 	return &cfg
 }
 
-func junoEncoding() *testutil.TestEncodingConfig {
-	cfg := cosmos.DefaultEncoding()
-
-	// register custom types
-	ibclocalhost.RegisterInterfaces(cfg.InterfaceRegistry)
-	wasmtypes.RegisterInterfaces(cfg.InterfaceRegistry)
-	feesharetypes.RegisterInterfaces(cfg.InterfaceRegistry)
-	tokenfactorytypes.RegisterInterfaces(cfg.InterfaceRegistry)
-
-	//github.com/cosmos/cosmos-sdk/types/module/testutil
-
-	return &cfg
-}
-
 func CreateChain(
 	t *testing.T,
 	ctx context.Context,
 	numVals, numFull int,
-	genesisOverrides ...cosmos.GenesisKV,
 ) (*interchaintest.Interchain, *cosmos.CosmosChain) {
-
-	//junoConfig := ibc.ChainConfig{
-	//	Type:                   "cosmos",
-	//	Name:                   "juno",
-	//	ChainID:                "juno-2",
-	//	Images:                 []ibc.DockerImage{JunoImage},
-	//	Bin:                    "junod",
-	//	Bech32Prefix:           "juno",
-	//	Denom:                  Denom,
-	//	CoinType:               "118",
-	//	GasPrices:              fmt.Sprintf("0%s", Denom),
-	//	GasAdjustment:          2.0,
-	//	TrustingPeriod:         "112h",
-	//	NoHostMount:            false,
-	//	ConfigFileOverrides:    nil,
-	//	EncodingConfig:         junoEncoding(),
-	//	UsingNewGenesisCommand: true,
-	//	ModifyGenesis:          cosmos.ModifyGenesis(defaultGenesisKV),
-	//}
 
 	cheqdConfig := ibc.ChainConfig{
 		Type:    "cosmos",
@@ -108,28 +44,19 @@ func CreateChain(
 				UidGid:     "1025:1025",
 			},
 		},
-		Bin:                    "cheqd-noded",
-		Bech32Prefix:           "cheqd",
-		Denom:                  "ncheq",
-		CoinType:               "118",
-		GasPrices:              "50ncheq",
-		GasAdjustment:          1.3,
-		TrustingPeriod:         "508h",
-		NoHostMount:            false,
-		ConfigFileOverrides:    nil,
-		EncodingConfig:         cheqdEncoding(),
-		UsingNewGenesisCommand: false,
+		Bin:                 "cheqd-noded",
+		Bech32Prefix:        "cheqd",
+		Denom:               "ncheq",
+		CoinType:            "118",
+		GasPrices:           "50ncheq",
+		GasAdjustment:       1.3,
+		TrustingPeriod:      "508h",
+		NoHostMount:         false,
+		ConfigFileOverrides: nil,
+		EncodingConfig:      cheqdEncoding(),
 	}
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		//{
-		//	Name:          "juno",
-		//	ChainName:     "juno",
-		//	Version:       "v16.0.0",
-		//	ChainConfig:   junoConfig,
-		//	NumValidators: &numVals,
-		//	NumFullNodes:  &numFull,
-		//},
 		{
 			Name:          "cheqd",
 			ChainName:     "cheqd",
