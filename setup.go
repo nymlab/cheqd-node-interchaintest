@@ -2,7 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	//"fmt"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +17,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	feesharetypes "github.com/CosmosContracts/juno/v16/x/feeshare/types"
 	tokenfactorytypes "github.com/CosmosContracts/juno/v16/x/tokenfactory/types"
+	didtypes "github.com/cheqd/cheqd-node/x/did/types"
+	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
 	ibclocalhost "github.com/cosmos/ibc-go/v7/modules/light-clients/09-localhost"
 )
 
@@ -45,6 +47,15 @@ var (
 		},
 	}
 )
+
+func cheqdEncoding() *testutil.TestEncodingConfig {
+	cfg := cosmos.DefaultEncoding()
+
+	didtypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	resourcetypes.RegisterInterfaces(cfg.InterfaceRegistry)
+
+	return &cfg
+}
 
 func junoEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
@@ -92,20 +103,22 @@ func CreateChain(
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/nymlab/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    "prop31",               // FOR LOCAL IMAGE USE: Docker Image Tag
+				Repository: "cheqd",   // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    "develop", // FOR LOCAL IMAGE USE: Docker Image Tag
 				UidGid:     "1025:1025",
 			},
 		},
-		Bin:                 "cheqd-noded",
-		Bech32Prefix:        "cheqd",
-		Denom:               "ncheq",
-		CoinType:            "118",
-		GasPrices:           "50ncheq",
-		GasAdjustment:       1.3,
-		TrustingPeriod:      "508h",
-		NoHostMount:         false,
-		ConfigFileOverrides: nil,
+		Bin:                    "cheqd-noded",
+		Bech32Prefix:           "cheqd",
+		Denom:                  "ncheq",
+		CoinType:               "118",
+		GasPrices:              "50ncheq",
+		GasAdjustment:          1.3,
+		TrustingPeriod:         "508h",
+		NoHostMount:            false,
+		ConfigFileOverrides:    nil,
+		EncodingConfig:         cheqdEncoding(),
+		UsingNewGenesisCommand: false,
 	}
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
@@ -120,7 +133,7 @@ func CreateChain(
 		{
 			Name:          "cheqd",
 			ChainName:     "cheqd",
-			Version:       "prop31",
+			Version:       "develop",
 			ChainConfig:   cheqdConfig,
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
@@ -143,6 +156,8 @@ func CreateChain(
 			SkipPathCreation: true,
 		},
 	)
+
+	fmt.Printf("error %s", err)
 	require.NoError(t, err)
 
 	return ic, chains[0].(*cosmos.CosmosChain)

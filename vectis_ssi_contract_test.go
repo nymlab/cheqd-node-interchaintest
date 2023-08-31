@@ -7,7 +7,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7"
 	//"github.com/strangelove-ventures/interchaintest/v7/ibc"
 	//"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	//"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/require"
 )
 
