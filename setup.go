@@ -30,8 +30,10 @@ func cheqdEncoding() *simappparams.EncodingConfig {
 }
 
 const (
-	votingPeriod     = "10s"
-	maxDepositPeriod = "10s"
+	votingPeriod       = "10s"
+	maxDepositPeriod   = "10s"
+	haltHeightDelta    = uint64(10) // will propose upgrade this many blocks in the future
+	blocksAfterUpgrade = uint64(10)
 )
 
 func ModifyGenesisShortProposals(votingPeriod string, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
@@ -98,7 +100,7 @@ func CreateCheqdChain(
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "cheqd",
-			ChainName:     "cheqd",
+			ChainName:     "testnet",
 			Version:       version,
 			ChainConfig:   GetCheqdConfig(version),
 			NumValidators: &numVals,

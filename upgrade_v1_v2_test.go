@@ -3,7 +3,6 @@ package cheqd_interchaintest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -18,11 +17,6 @@ import (
 	"go.uber.org/zap/zaptest"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-)
-
-const (
-	haltHeightDelta    = uint64(10) // will propose upgrade this many blocks in the future
-	blocksAfterUpgrade = uint64(10)
 )
 
 func TestCheqdUpgradeIBC(t *testing.T) {
@@ -86,6 +80,8 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
 	chainUser := users[0]
 
+	preUpgradeResource := CreateAndUploadDid(t, ctx, "did_payload.json", "resource_payload.json", "revocationList", chain, chainUser, "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
+
 	height, err := chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 
@@ -100,9 +96,7 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	}
 
 	info, err := json.Marshal(upgradeInfo)
-	if err != nil {
-		fmt.Errorf("cannot marshal info")
-	}
+	require.NoError(t, err, "error marshalling")
 
 	proposal := cosmos.SoftwareUpgradeProposal{
 		Deposit:     "500000000" + chain.Config().Denom, // greater than min deposit
@@ -143,13 +137,7 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 
 	// upgrade version on all nodes
 	chain.UpgradeVersion(ctx, client, upgradeVersion)
-	//
 
-	// got to here
-
-	// start all nodes back up.
-	// validators reach consensus on first block after upgrade height
-	// and chain block production resumes.
 	err = chain.StartAllNodes(ctx)
 	require.NoError(t, err, "error starting upgraded node(s)")
 
@@ -159,4 +147,8 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 
+	res1, _, err := chain.Nodes()[0].ExecQuery(ctx, "resource", "specific-resource", "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
+	require.NoError(t, err, "query-resource err")
+	require.NotNil(t, res1, "return resource err")
+	require.Equal(t, preUpgradeResource, res1)
 }
