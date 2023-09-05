@@ -7,6 +7,7 @@ import (
 	"github.com/icza/dyno"
 	"testing"
 
+	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
@@ -95,12 +96,12 @@ func CreateCheqdChain(
 	ctx context.Context,
 	numVals, numFull int,
 	version string,
-) (*interchaintest.Interchain, *cosmos.CosmosChain) {
+) (*interchaintest.Interchain, *cosmos.CosmosChain, *client.Client, string) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "cheqd",
-			ChainName:     "testnet",
+			ChainName:     "cheqd",
 			Version:       version,
 			ChainConfig:   GetCheqdConfig(version),
 			NumValidators: &numVals,
@@ -127,5 +128,5 @@ func CreateCheqdChain(
 
 	require.NoError(t, err)
 
-	return ic, chains[0].(*cosmos.CosmosChain)
+	return ic, chains[0].(*cosmos.CosmosChain), client, network
 }

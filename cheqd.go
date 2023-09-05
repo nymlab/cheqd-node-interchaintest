@@ -14,7 +14,7 @@ import (
 
 func MustUploadPayload(ctx context.Context, filepath string, filename string, chain *cosmos.CosmosChain) error {
 	content, err := os.ReadFile(fmt.Sprintf("%s/%s", filepath, filename))
-	str := fmt.Sprintf(`touch /var/cosmos-chain/testnet/%s && echo '%s' > /var/cosmos-chain/testnet/%s`, filename, string(content), filename)
+	str := fmt.Sprintf(`touch /var/cosmos-chain/cheqd/%s && echo '%s' > /var/cosmos-chain/cheqd/%s`, filename, string(content), filename)
 	_, _, err = chain.Exec(ctx, []string{"sh", "-c", str}, []string{})
 	return err
 }
@@ -27,13 +27,16 @@ func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, re
 	require.NoError(t, err, "upload file err")
 	err = MustUploadPayload(ctx, "artifacts", resourceFile, chain)
 
-	chainNode := chain.Nodes()[0]
+	nodes := chain.Nodes()
+	chainNode := nodes[len(nodes)-1]
+
+	fmt.Printf("INPUT USER::::: %s", user)
 
 	require.NoError(t, err, "upload file err")
-	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/testnet/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
 	require.NoError(t, err, "create-did err")
 
-	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "resource", "create", fmt.Sprintf("/var/cosmos-chain/testnet/%s", resourcePayload), fmt.Sprintf("/var/cosmos-chain/testnet/%s", resourceFile), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "resource", "create", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourcePayload), fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourceFile), "--gas", "200000", "--fees", "50000000000ncheq")
 	require.NoError(t, err, "create-resource err")
 
 	// Query onchain data

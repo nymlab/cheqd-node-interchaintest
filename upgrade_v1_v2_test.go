@@ -7,81 +7,44 @@ import (
 	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	//"github.com/strangelove-ventures/interchaintest/v6/conformance"
 	//"github.com/strangelove-ventures/interchaintest/v6/ibc"
 	//"github.com/strangelove-ventures/interchaintest/v6/relayer"
-	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v6/testutil"
+	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap/zaptest"
-
+	//"github.com/strangelove-ventures/interchaintest/v6/testreporter"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"github.com/strangelove-ventures/interchaintest/v6/testutil"
 )
 
 func TestCheqdUpgradeIBC(t *testing.T) {
-	//CosmosChainUpgradeIBCTest(t, "cheqd", "v1.4.4-heighliner", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1-heighliner", "v2")
 	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1", "v2")
 }
 
 func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {
 
+	//if testing.Short() {
+	//	t.Skip("skipping in short mode")
+	//}
+
 	t.Parallel()
-
-	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		{
-			Name:        chainName,
-			ChainName:   chainName,
-			Version:     initialVersion,
-			ChainConfig: GetCheqdConfig(initialVersion),
-		},
-	})
-
-	chains, err := cf.Chains(t.Name())
-	require.NoError(t, err)
-
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	const (
-		path        = "ibc-upgrade-test-path"
-		relayerName = "relayer"
-	)
-
-	//// Get a relayer instance
-	//rf := interchaintest.NewBuiltinRelayerFactory(
-	//	ibc.CosmosRly,
-	//	zaptest.NewLogger(t),
-	//	relayer.StartupFlags("-b", "100"),
-	//)
-
-	//r := rf.Build(t, client, network)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	rep := testreporter.NewNopReporter()
-
-	require.NoError(t, ic.Build(ctx, rep.RelayerExecReporter(t), interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: true,
-	}))
-
+	ctx, cancelFn := context.WithCancel(context.Background())
 	t.Cleanup(func() {
-		_ = ic.Close()
+		cancelFn()
 	})
 
-	const userFunds = int64(10_000_000_000)
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
-	chainUser := users[0]
+	// create a single chain instance with x validators
+	ic, chain, client, _ := CreateCheqdChain(t, ctx, 2, 1, "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24")
+	require.NotNil(t, ic)
+	require.NotNil(t, chain)
+
+	const userFunds = int64(10_000_000_000_000)
+	chainUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
+	chainUser := chainUsers[0]
 
 	preUpgradeResource := CreateAndUploadDid(t, ctx, "did_payload.json", "resource_payload.json", "revocationList", chain, chainUser, "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
 
+	//fmt.Println(preUpgradeResource)
 	height, err := chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 
@@ -89,7 +52,7 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 
 	urlMap := make(plan.BinaryDownloadURLMap)
 	// use a small file
-	urlMap["darwin/amd64"] = "https://github.com/cheqd/did-resolver/releases/download/v3.5.1/did-resolver-3.5.1-darwin-amd64.tar.gz?checksum=sha256:3408e2a65fd1ccb57eee19ff8f42d6c50cc4876fbe91537864be2a335a9fa9dd"
+	urlMap["darwin/amd64"] = "https://github.com/CosmWasm/cw-plus/releases/download/v1.1.0/cw4_group.wasm?checksum=sha256:506f9d6ebbe7350cc92620675e8e85988e052d4cede4d1e4d95f7201b8a0e223"
 
 	upgradeInfo := plan.Info{
 		Binaries: urlMap,
@@ -151,4 +114,8 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	require.NoError(t, err, "query-resource err")
 	require.NotNil(t, res1, "return resource err")
 	require.Equal(t, preUpgradeResource, res1)
+
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
 }
