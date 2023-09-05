@@ -51,7 +51,7 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	haltHeight := height + haltHeightDelta
 
 	urlMap := make(plan.BinaryDownloadURLMap)
-	// use a small file
+	// use a small file as this gets downloaded
 	urlMap["darwin/amd64"] = "https://github.com/CosmWasm/cw-plus/releases/download/v1.1.0/cw4_group.wasm?checksum=sha256:506f9d6ebbe7350cc92620675e8e85988e052d4cede4d1e4d95f7201b8a0e223"
 
 	upgradeInfo := plan.Info{
