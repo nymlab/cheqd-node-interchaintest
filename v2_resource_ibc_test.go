@@ -120,7 +120,6 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	require.NoError(t, err, "parse contractRes err")
 
 	contractAddr := contractsRes.Contracts[len(contractsRes.Contracts)-1]
-	fmt.Println("contract ", contractAddr)
 
 	// ===================================
 	// Add channel and make relayer relay it
@@ -157,7 +156,7 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	require.NoError(t, err, "exec error err")
 
 	height, err := juno.Height(ctx)
-	require.NoError(t, err, "error fetching height before upgrade")
+	require.NoError(t, err, "error fetching height before flush")
 
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*12)
 	defer timeoutCtxCancel()

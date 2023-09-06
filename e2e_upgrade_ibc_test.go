@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"strings"
 	"testing"
 	"time"
+	"unicode"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
@@ -20,14 +23,11 @@ import (
 )
 
 func TestCheqdProp31IBC(t *testing.T) {
-	UpgradeV2ResourceIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1", "v2")
+	UpgradeV2ResourceIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc2", "v2")
 }
 
 func UpgradeV2ResourceIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {
 
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
 	t.Parallel()
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
@@ -38,10 +38,10 @@ func UpgradeV2ResourceIBCTest(t *testing.T, chainName string, initialVersion str
 			ChainConfig: GetCheqdConfig(initialVersion),
 		},
 		{
-			Name:    "juno",
-			Version: "v16.0.0",
-		},
-	})
+			Name:        "juno",
+			ChainName:   "juno",
+			Version:     "v14.1.0",
+			ChainConfig: GetJunoConfig()}})
 
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
@@ -91,12 +91,13 @@ func UpgradeV2ResourceIBCTest(t *testing.T, chainName string, initialVersion str
 		_ = ic.Close()
 	})
 
-	const userFunds = int64(10_000_000_000)
+	const userFunds = int64(10_000_000_000_000)
 	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
 	cheqdUser := cheqdUsers[0]
 
 	junoUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, juno)
 	junoUser := junoUsers[0]
+	junoNode := juno.FullNodes[0]
 
 	// test IBC conformance before chain upgrade
 	conformance.TestChainPair(t, ctx, client, network, cheqd, juno, rf, rep, r, path)
@@ -190,28 +191,81 @@ func UpgradeV2ResourceIBCTest(t *testing.T, chainName string, initialVersion str
 	// juno user upload and instantiate anoncreds contract
 	// ===================================
 	codeId, err := juno.StoreContract(ctx, junoUser.KeyName(), "contracts/vectis_anoncreds_verifier.wasm")
-	if err != nil {
-		t.Fatal(err)
-	}
-	contractAddr, err := juno.InstantiateContract(ctx, junoUser.KeyName(), codeId, "{}", true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	require.NotNil(t, codeId)
-	require.NotNil(t, contractAddr)
+	require.NoError(t, err, "code store err")
+
+	_, err = junoNode.ExecTx(ctx, junoUser.KeyName(), "wasm", "instantiate", codeId, "{}", "--label", "vectis-ssi", "--gas", "2000000", "--no-admin")
+	require.NoError(t, err, "instantiate err")
+
+	stdout, _, err := junoNode.ExecQuery(ctx, "wasm", "list-contract-by-code", codeId)
+	require.NoError(t, err, "Query err")
+
+	contractsRes := QueryContractsByCodeResponse{}
+	err = json.Unmarshal([]byte(stdout), &contractsRes)
+	require.NoError(t, err, "parse contractRes err")
+
+	contractAddr := contractsRes.Contracts[len(contractsRes.Contracts)-1]
 
 	// ===================================
 	// Add channel and make relayer relay it
 	// ===================================
 
 	createChannelOptions := ibc.CreateChannelOptions{
-		SourcePortName: "cheqd-resource",
+		SourcePortName: "cheqdresource",
 		DestPortName:   fmt.Sprintf("wasm.%s", contractAddr),
 		Order:          ibc.Unordered,
 		Version:        "cheqd-resource-v3",
 	}
 
-	err = r.LinkPath(ctx, rep.RelayerExecReporter(t), ssiPath, createChannelOptions, ibc.CreateClientOptions{})
-	require.NoError(t, err, "query-resource err")
+	err = r.GeneratePath(ctx, rep.RelayerExecReporter(t), "cheqd-mainnet-1", "juno-mainnet-1", ssiPath)
+	require.NoError(t, err, "generate path relayer err")
+	err = r.LinkPath(ctx, rep.RelayerExecReporter(t), ssiPath, createChannelOptions, ibc.DefaultClientOpts())
+	// These do not actually return error if they do not succeed in making the channel
+	require.NoError(t, err, "create channel relayer err")
+	channelsCheqd, err := r.GetChannels(ctx, rep.RelayerExecReporter(t), "cheqd-mainnet-1")
+	require.Len(t, channelsCheqd, 2)
+
+	// ============================================================
+	// Upload vectis-ssi contract on remote cosmwasm enabled chain
+	// ============================================================
+	err = juno.ExecuteContract(ctx, junoUser.KeyName(), contractAddr, fmt.Sprintf(`{"update_state": {"resource_id": "%s", "collection_id": "%s" }}`, TestResourceId, TestCollectionId))
+	require.NoError(t, err, "exec error err")
+
+	height, err = juno.Height(ctx)
+	require.NoError(t, err, "error fetching height before flush")
+
+	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*12)
+	defer timeoutCtxCancel()
+	_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, juno)
+
+	for _, channel := range channelsCheqd {
+		fmt.Printf("Channel %s \n", channel.ChannelID)
+		// we do not check if flushing has error because channels can be for different paths
+		r.FlushPackets(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
+		r.FlushAcknowledgements(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
+		timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*12)
+		defer timeoutCtxCancel()
+		_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, juno)
+	}
+
+	var queryData QueryResultResourceWithMetadata
+	query, err := json.Marshal(QueryMsg{QueryState: &QueryStateInput{ResourceId: TestResourceId, CollectionId: TestCollectionId}})
+	require.NoError(t, err, "query parse err")
+
+	stdout, _, err = junoNode.ExecQuery(ctx, "wasm", "contract-state", "smart", contractAddr, string(query))
+	require.NoError(t, err, "exec err")
+
+	err = json.Unmarshal(stdout, &queryData)
+	require.NoError(t, err, "ack parse err")
+
+	resourceFromContract := strings.TrimFunc(string(queryData.Data.GetResource().GetData()), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	})
+
+	content, err := os.ReadFile(fmt.Sprintf("%s/%s", "artifacts", "revocationList"))
+	originalResource := strings.TrimFunc(string(content), func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	})
+
+	require.Equal(t, resourceFromContract, originalResource)
 
 }
