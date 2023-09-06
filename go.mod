@@ -5,6 +5,7 @@ go 1.18
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
+	github.com/CosmWasm/wasmd => github.com/CosmWasm/wasmd v0.31.0
 	github.com/cosmos/cosmos-sdk => github.com/cheqd/cosmos-sdk v0.46.10-barberry
 	// From Cosmos SDK v0.46.8 upstream
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
@@ -18,11 +19,11 @@ replace (
 require (
 	github.com/cheqd/cheqd-node v1.4.4
 	github.com/cosmos/cosmos-sdk v0.47.0-rc2.0.20230220103612-f094a0c33410
+	github.com/docker/docker v20.10.19+incompatible
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/strangelove-ventures/interchaintest/v6 v6.0.0-20230131024613-0bdc194c2aa1
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
-
 )
 
 require (
@@ -75,7 +76,6 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v20.10.19+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect

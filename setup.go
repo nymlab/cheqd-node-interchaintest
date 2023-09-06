@@ -91,6 +91,32 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 	}
 }
 
+func GetJunoConfig() ibc.ChainConfig {
+	return ibc.ChainConfig{
+		Type:    "cosmos",
+		Name:    "juno",
+		ChainID: "juno-mainnet-1",
+		Images: []ibc.DockerImage{
+			{
+				Repository: "ghcr.io/strangelove-ventures/heighliner/juno",
+				Version:    "v14.1.0",
+				UidGid:     "1025:1025",
+			},
+		},
+		Bin:                 "junod",
+		Bech32Prefix:        "juno",
+		Denom:               "ujunox",
+		CoinType:            "118",
+		GasPrices:           "50ujunox",
+		GasAdjustment:       1.3,
+		TrustingPeriod:      "508h",
+		NoHostMount:         false,
+		ConfigFileOverrides: nil,
+		EncodingConfig:      nil,
+		ModifyGenesis:       ModifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
+	}
+}
+
 func CreateCheqdChain(
 	t *testing.T,
 	ctx context.Context,

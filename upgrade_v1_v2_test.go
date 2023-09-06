@@ -23,9 +23,9 @@ func TestCheqdUpgradeIBC(t *testing.T) {
 
 func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {
 
-	//if testing.Short() {
-	//	t.Skip("skipping in short mode")
-	//}
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
 
 	t.Parallel()
 	ctx, cancelFn := context.WithCancel(context.Background())

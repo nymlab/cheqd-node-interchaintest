@@ -12,6 +12,9 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v6/ibc"
 )
 
+const TestResourceId = "9fbb1b86-91f8-4942-97b9-725b7714131c"
+const TestCollectionId = "5rjaLzcffhGUH4nt4fyfAg"
+
 func MustUploadPayload(ctx context.Context, filepath string, filename string, chain *cosmos.CosmosChain) error {
 	content, err := os.ReadFile(fmt.Sprintf("%s/%s", filepath, filename))
 	str := fmt.Sprintf(`touch /var/cosmos-chain/cheqd/%s && echo '%s' > /var/cosmos-chain/cheqd/%s`, filename, string(content), filename)
@@ -29,8 +32,6 @@ func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, re
 
 	nodes := chain.Nodes()
 	chainNode := nodes[len(nodes)-1]
-
-	fmt.Printf("INPUT USER::::: %s", user)
 
 	require.NoError(t, err, "upload file err")
 	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
