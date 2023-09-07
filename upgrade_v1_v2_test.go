@@ -44,7 +44,6 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 
 	preUpgradeResource := CreateAndUploadDid(t, ctx, "did_payload.json", "resource_payload.json", "revocationList", chain, chainUser, "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
 
-	//fmt.Println(preUpgradeResource)
 	height, err := chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 

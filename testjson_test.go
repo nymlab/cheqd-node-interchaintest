@@ -2,7 +2,6 @@ package cheqd_interchaintest
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -23,6 +22,5 @@ func TestJsonparse(t *testing.T) {
 	var payload resourcetypes.MsgCreateResourcePayload
 	err = json.Unmarshal(payloadJSON, &payload)
 
-	fmt.Println(payload)
-	require.NoError(t, err, "aprse")
+	require.NoError(t, err, "parse")
 }

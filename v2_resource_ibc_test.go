@@ -163,7 +163,6 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, juno)
 
 	for _, channel := range channelsCheqd {
-		fmt.Printf("Channel %s \n", channel.ChannelID)
 		// we do not check if flushing has error because channels can be for different paths
 		r.FlushPackets(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
 		r.FlushAcknowledgements(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
