@@ -23,7 +23,7 @@ import (
 )
 
 func TestCheqdProp31IBC(t *testing.T) {
-	UpgradeV2ResourceIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc2", "v2")
+	UpgradeV2ResourceIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "prop31-stage1", "v2")
 }
 
 func UpgradeV2ResourceIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {

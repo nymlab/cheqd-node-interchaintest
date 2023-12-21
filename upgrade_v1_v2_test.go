@@ -18,7 +18,7 @@ import (
 )
 
 func TestCheqdUpgradeIBC(t *testing.T) {
-	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "v2.0.0-rc1", "v2")
+	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "prop31-stage1", "v2")
 }
 
 func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {
