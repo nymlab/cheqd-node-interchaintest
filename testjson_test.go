@@ -2,8 +2,9 @@ package cheqd_interchaintest
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	cheqdCli "github.com/cheqd/cheqd-node/x/did/client/cli"
 	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"

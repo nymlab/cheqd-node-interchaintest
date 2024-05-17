@@ -6,19 +6,20 @@ import (
 	"testing"
 	"time"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
-	//"github.com/strangelove-ventures/interchaintest/v6/conformance"
-	//"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	//"github.com/strangelove-ventures/interchaintest/v6/relayer"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
+	//"github.com/strangelove-ventures/interchaintest/v7/conformance"
+	//"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	//"github.com/strangelove-ventures/interchaintest/v7/relayer"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/stretchr/testify/require"
-	//"github.com/strangelove-ventures/interchaintest/v6/testreporter"
+
+	//"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	"github.com/strangelove-ventures/interchaintest/v6/testutil"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 )
 
 func TestCheqdUpgradeIBC(t *testing.T) {
-	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node", "prop31-stage1", "v2")
+	CosmosChainUpgradeIBCTest(t, "cheqd", "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24", "ghcr.io/nymlab/cheqd-node/v2", "prop31-stage1", "v2")
 }
 
 func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion string, initialContainerRepo string, upgradeVersion string, upgradeName string) {

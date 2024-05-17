@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 const TestResourceId = "9fbb1b86-91f8-4942-97b9-725b7714131c"
@@ -34,10 +34,10 @@ func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, re
 	chainNode := nodes[len(nodes)-1]
 
 	require.NoError(t, err, "upload file err")
-	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
 	require.NoError(t, err, "create-did err")
 
-	_, err = chainNode.ExecCheqdTx(ctx, user.KeyName(), "resource", "create", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourcePayload), fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourceFile), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecTx(ctx, user.KeyName(), "resource", "create", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourcePayload), fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourceFile), "--gas", "200000", "--fees", "50000000000ncheq")
 	require.NoError(t, err, "create-resource err")
 
 	// Query onchain data

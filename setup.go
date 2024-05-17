@@ -4,18 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/icza/dyno"
 	"testing"
+
+	"github.com/icza/dyno"
 
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
-	"github.com/strangelove-ventures/interchaintest/v6/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v6/ibc"
-	"github.com/strangelove-ventures/interchaintest/v6/testreporter"
+	simappparams "cosmossdk.io/simapp/params"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 
 	didtypes "github.com/cheqd/cheqd-node/x/did/types"
 	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
@@ -69,15 +70,15 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
+				Repository: "ghcr.io/nymlab/cheqd-node/v2", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    version,                        // FOR LOCAL IMAGE USE: Docker Image Tag
 				UidGid:     "1000:1000",
-				//Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				//Repository: "ghcr.io/nymlab/cheqd-node/v2", // FOR LOCAL IMAGE USE: Docker Image Name
 				//Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
 				//UidGid:     "1025:1025",
 			},
 		},
-		Bin:                 "cheqd-noded",
+		Bin:                 "cheqd-node/v2d",
 		Bech32Prefix:        "cheqd",
 		Denom:               "ncheq",
 		CoinType:            "118",

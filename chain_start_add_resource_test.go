@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v6"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/stretchr/testify/require"
 )
 
