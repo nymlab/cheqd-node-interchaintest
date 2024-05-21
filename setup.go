@@ -92,23 +92,23 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 	}
 }
 
-func GetJunoConfig() ibc.ChainConfig {
+func GetNeutronConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
 		Type:    "cosmos",
-		Name:    "juno",
-		ChainID: "juno-mainnet-1",
+		Name:    "neutron",
+		ChainID: "neutron-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/strangelove-ventures/heighliner/juno",
-				Version:    "v14.1.0",
+				Repository: "ghcr.io/strangelove-ventures/heighliner/neutron",
+				Version:    "v2.0.4",
 				UidGid:     "1025:1025",
 			},
 		},
-		Bin:                 "junod",
-		Bech32Prefix:        "juno",
-		Denom:               "ujunox",
+		Bin:                 "neutrond",
+		Bech32Prefix:        "ntrn",
+		Denom:               "untrn",
 		CoinType:            "118",
-		GasPrices:           "50ujunox",
+		GasPrices:           "50untrn",
 		GasAdjustment:       1.3,
 		TrustingPeriod:      "508h",
 		NoHostMount:         false,

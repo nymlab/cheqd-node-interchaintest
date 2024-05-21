@@ -99,7 +99,7 @@ func CosmosChainUpgradeIBCTest(t *testing.T, chainName string, initialVersion st
 	require.NoError(t, err, "error stopping node(s)")
 
 	// upgrade version on all nodes
-	chain.UpgradeVersion(ctx, client, upgradeVersion)
+	chain.UpgradeVersion(ctx, client, initialContainerRepo, upgradeVersion)
 
 	err = chain.StartAllNodes(ctx)
 	require.NoError(t, err, "error starting upgraded node(s)")
