@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	simappparams "cosmossdk.io/simapp/params"
+	testutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -22,7 +22,7 @@ import (
 	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
 )
 
-func cheqdEncoding() *simappparams.EncodingConfig {
+func cheqdEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 
 	didtypes.RegisterInterfaces(cfg.InterfaceRegistry)

@@ -5,7 +5,7 @@ go 1.21
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
-	github.com/CosmWasm/wasmd => github.com/CosmWasm/wasmd v0.31.0
+	github.com/CosmWasm/wasmd => github.com/neutron-org/wasmd v0.45.0
 	github.com/cosmos/cosmos-sdk => github.com/cheqd/cosmos-sdk v0.47.10-version-mismatch-guard
 	// From Cosmos SDK v0.46.8 upstream
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
@@ -15,10 +15,11 @@ replace (
 )
 
 require (
-	github.com/cheqd/cheqd-node v1.4.6-0.20240416111413-fdf3b2cb9bef // indirect
+	github.com/cheqd/cheqd-node v1.4.6-0.20240416111413-fdf3b2cb9bef
 	github.com/cosmos/cosmos-sdk v0.47.10
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
+	github.com/strangelove-ventures/interchaintest/v7 v7.0.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.26.0
 )
@@ -207,7 +208,6 @@ require (
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
-	github.com/strangelove-ventures/interchaintest/v7 v7.0.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
@@ -222,7 +222,6 @@ require (
 	go.opentelemetry.io/otel v1.19.0 // indirect
 	go.opentelemetry.io/otel/metric v1.19.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
-	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
