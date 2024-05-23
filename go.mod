@@ -2,20 +2,26 @@ module github.com/nymlab/cheqd-interchaintest
 
 go 1.21
 
-toolchain go1.22.3
-
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
+
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.1.0
+
 	github.com/CosmWasm/wasmd => github.com/neutron-org/wasmd v0.45.0
+
 	// If using CometBFT v0.37.3+, use a replace statement in the interchaintest nested go.mod for v0.37.2.
 	// A state breaking function signature occurs due to a Schnorrkel v1.0.0 bump on the BFT side, which is not compatible.
 	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.37.2
+
+	// replace cosmos-sdk v0.47.10
 	github.com/cosmos/cosmos-sdk => github.com/cheqd/cosmos-sdk v0.47.10-height-mismatch
+
 	// From Cosmos SDK v0.46.8 upstream
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+
 	// use informal systems fork of tendermint
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
+
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
 
