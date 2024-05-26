@@ -70,15 +70,15 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/nymlab/cheqd-node/v2", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    version,                        // FOR LOCAL IMAGE USE: Docker Image Tag
-				UidGid:     "1000:1000",
-				//Repository: "ghcr.io/nymlab/cheqd-node/v2", // FOR LOCAL IMAGE USE: Docker Image Name
+				Repository: "ghcr.io/strangelove-ventures/heighliner/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    version,                                         // FOR LOCAL IMAGE USE: Docker Image Tag
+				UidGid:     "1025:1025",
+				//Repository: "ghcr.io/nymlab/cheqd-node/", // FOR LOCAL IMAGE USE: Docker Image Name
 				//Version:    version,                     // FOR LOCAL IMAGE USE: Docker Image Tag
 				//UidGid:     "1025:1025",
 			},
 		},
-		Bin:                 "cheqd-node/v2d",
+		Bin:                 "cheqd-noded",
 		Bech32Prefix:        "cheqd",
 		Denom:               "ncheq",
 		CoinType:            "118",
@@ -101,7 +101,7 @@ func GetNeutronConfig() ibc.ChainConfig {
 			{
 				Repository: "ghcr.io/strangelove-ventures/heighliner/neutron",
 				Version:    "v2.0.4",
-				UidGid:     "1025:1025",
+				UidGid:     "1030:1030",
 			},
 		},
 		Bin:                 "neutrond",

@@ -24,7 +24,7 @@ func TestBasicCheqdV2Start(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount, fullnodeCount := 1, 1
 
-	ic, cheqd, _, _ := CreateCheqdChain(t, ctx, validatorsCount, fullnodeCount, "sha-5c98ec329797eb7fae0bc40e4b3090b3114e6c24")
+	ic, cheqd, _, _ := CreateCheqdChain(t, ctx, validatorsCount, fullnodeCount, "v2.0.1")
 	require.NotNil(t, ic)
 	require.NotNil(t, cheqd)
 
