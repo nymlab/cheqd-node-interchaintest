@@ -28,7 +28,7 @@ var (
 func TestCheqdV2VectisIBC(t *testing.T) {
 	var (
 		chainName    = "cheqd"
-		cheqdVersion = "prop31-stage1"
+		cheqdVersion = "v2.0.1"
 	)
 
 	if testing.Short() {
