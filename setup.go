@@ -53,9 +53,9 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/strangelove-ventures/heighliner/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    version,                                         // FOR LOCAL IMAGE USE: Docker Image Tag
-				UidGid:     "1025:1025",
+				Repository: "ghcr.io/cheqd/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version:    version,                    // FOR LOCAL IMAGE USE: Docker Image Tag
+				UidGid:     "1000:1000",
 			},
 		},
 		Bin:                 "cheqd-noded",
@@ -76,13 +76,13 @@ func GetNeutronConfig() ibc.ChainConfig {
 	ShortProposalsGenesis := getShortProposalsGenesis(votingPeriod, maxDepositPeriod, neutronDenom)
 	return ibc.ChainConfig{
 		Type:    "cosmos",
-		Name:    "neutron",
+		Name:    "ntrn",
 		ChainID: "neutron-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
 				Repository: "ghcr.io/strangelove-ventures/heighliner/neutron",
 				Version:    "v2.0.4",
-				UidGid:     "1030:1030",
+				UidGid:     "1025:1025",
 			},
 		},
 		Bin:                 "neutrond",
