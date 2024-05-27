@@ -32,7 +32,6 @@ require (
 	github.com/cheqd/cheqd-node v1.4.6-0.20240416111413-fdf3b2cb9bef
 	github.com/cosmos/cosmos-sdk v0.47.10
 	github.com/docker/docker v24.0.7+incompatible
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0
 	github.com/stretchr/testify v1.9.0
 	go.uber.org/zap v1.26.0
@@ -153,6 +152,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.4.1 // indirect
