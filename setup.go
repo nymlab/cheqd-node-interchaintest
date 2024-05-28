@@ -76,7 +76,7 @@ func GetNeutronConfig() ibc.ChainConfig {
 	ShortProposalsGenesis := getShortProposalsGenesis(votingPeriod, maxDepositPeriod, neutronDenom)
 	return ibc.ChainConfig{
 		Type:    "cosmos",
-		Name:    "ntrn",
+		Name:    "neutron",
 		ChainID: "neutron-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
@@ -86,10 +86,10 @@ func GetNeutronConfig() ibc.ChainConfig {
 			},
 		},
 		Bin:                 "neutrond",
-		Bech32Prefix:        "ntrn",
+		Bech32Prefix:        "neutron",
 		Denom:               neutronDenom,
 		CoinType:            "118",
-		GasPrices:           "50untrn",
+		GasPrices:           "50 untrn",
 		GasAdjustment:       1.3,
 		TrustingPeriod:      "508h",
 		NoHostMount:         false,

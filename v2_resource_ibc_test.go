@@ -45,8 +45,8 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 			ChainConfig: GetCheqdConfig(cheqdVersion),
 		},
 		{
-			Name:        "ntrn",
-			ChainName:   "ntrn",
+			Name:        "neutron",
+			ChainName:   "neutron",
 			Version:     "v2.0.4",
 			ChainConfig: GetNeutronConfig()}})
 
@@ -57,8 +57,8 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	cheqd, neutron := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	const (
-		ssiPath     = "ssi-cheqd-ntrn-path"
-		path        = "cheqd-ntrn-path"
+		ssiPath     = "ssi-cheqd-neutron-path"
+		path        = "cheqd-neutron-path"
 		relayerName = "relayer"
 	)
 
