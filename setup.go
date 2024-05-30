@@ -2,6 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/docker/docker/client"
@@ -36,26 +37,17 @@ const (
 	blocksAfterUpgrade = uint64(10)
 )
 
-func getShortProposalsGenesis(votingPeriod string, maxDepositPeriod string, denom string) []cosmos.GenesisKV {
-	return []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", votingPeriod),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", maxDepositPeriod),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", denom),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "100"),
-	}
-}
-
-func GetCheqdConfig(version string) ibc.ChainConfig {
-	ShortProposalsGenesis := getShortProposalsGenesis(votingPeriod, maxDepositPeriod, cheqdDenom)
+func GetCheqdConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
 		Type:    "cosmos",
 		Name:    "cheqd",
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/cheqd/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version:    version,                    // FOR LOCAL IMAGE USE: Docker Image Tag
-				UidGid:     "1000:1000",
+				Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				//Repository: "ghcr.io/strangelove-ventures/heighliner/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
+				Version: "v2.0.1-arm64", // FOR LOCAL IMAGE USE: Docker Image Tag
+				UidGid:  "1000:1000",
 			},
 		},
 		Bin:                 "cheqd-noded",
@@ -68,12 +60,10 @@ func GetCheqdConfig(version string) ibc.ChainConfig {
 		NoHostMount:         false,
 		ConfigFileOverrides: nil,
 		EncodingConfig:      cheqdEncoding(),
-		ModifyGenesis:       cosmos.ModifyGenesis(ShortProposalsGenesis),
 	}
 }
 
 func GetNeutronConfig() ibc.ChainConfig {
-	ShortProposalsGenesis := getShortProposalsGenesis(votingPeriod, maxDepositPeriod, neutronDenom)
 	return ibc.ChainConfig{
 		Type:    "cosmos",
 		Name:    "neutron",
@@ -95,7 +85,6 @@ func GetNeutronConfig() ibc.ChainConfig {
 		NoHostMount:         false,
 		ConfigFileOverrides: nil,
 		EncodingConfig:      nil,
-		ModifyGenesis:       cosmos.ModifyGenesis(ShortProposalsGenesis),
 	}
 }
 
@@ -103,15 +92,15 @@ func CreateCheqdChain(
 	t *testing.T,
 	ctx context.Context,
 	numVals, numFull int,
-	version string,
 ) (*interchaintest.Interchain, *cosmos.CosmosChain, *client.Client, string) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "cheqd",
 			ChainName:     "cheqd",
-			Version:       version,
-			ChainConfig:   GetCheqdConfig(version),
+			Version:       "v2.0.1-arm64",
+			ChainConfig:   GetCheqdConfig(),
+			NoHostMount:   &[]bool{false}[0],
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
 		},
@@ -121,6 +110,7 @@ func CreateCheqdChain(
 	require.NoError(t, err)
 
 	ic := interchaintest.NewInterchain().AddChain(chains[0])
+
 	client, network := interchaintest.DockerSetup(t)
 
 	err = ic.Build(
@@ -133,6 +123,8 @@ func CreateCheqdChain(
 			SkipPathCreation: true,
 		},
 	)
+
+	fmt.Print("building finished")
 
 	require.NoError(t, err)
 

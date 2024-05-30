@@ -2,6 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
@@ -24,7 +25,13 @@ func TestBasicCheqdV2Start(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount, fullnodeCount := 1, 1
 
-	ic, cheqd, _, _ := CreateCheqdChain(t, ctx, validatorsCount, fullnodeCount, "sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2")
+	ic, cheqd, _, _ := CreateCheqdChain(
+		t,
+		ctx,
+		validatorsCount,
+		fullnodeCount,
+		//"sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2",
+	)
 	require.NotNil(t, ic)
 	require.NotNil(t, cheqd)
 
@@ -32,7 +39,19 @@ func TestBasicCheqdV2Start(t *testing.T) {
 	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
 	cheqdUser := cheqdUsers[0]
 
-	CreateAndUploadDid(t, ctx, "did_payload.json", "resource_payload.json", "revocationList", cheqd, cheqdUser, "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
+	fmt.Println("cheqdUser: ", cheqdUser)
+
+	CreateAndUploadDid(
+		t,
+		ctx,
+		"did_payload.json",
+		"resource_payload.json",
+		"revocationList",
+		cheqd,
+		cheqdUser,
+		"5rjaLzcffhGUH4nt4fyfAg",
+		"9fbb1b86-91f8-4942-97b9-725b7714131c",
+	)
 
 	t.Cleanup(func() {
 		cancelFn()

@@ -42,7 +42,7 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 			Name:        chainName,
 			ChainName:   chainName,
 			Version:     cheqdVersion,
-			ChainConfig: GetCheqdConfig(cheqdVersion),
+			ChainConfig: GetCheqdConfig(),
 		},
 		{
 			Name:        "neutron",
@@ -87,12 +87,15 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 
 	rep := testreporter.NewNopReporter()
 
-	require.NoError(t, ic.Build(ctx, rep.RelayerExecReporter(t), interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
+	require.NoError(
+		t,
+		ic.Build(ctx, rep.RelayerExecReporter(t), interchaintest.InterchainBuildOptions{
+			TestName:         t.Name(),
+			Client:           client,
+			NetworkID:        network,
+			SkipPathCreation: false,
+		}),
+	)
 
 	t.Cleanup(func() {
 		_ = ic.Close()
@@ -106,10 +109,26 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	// ===================================
 	// neutron user upload and instantiate anoncreds contract
 	// ===================================
-	codeId, err := neutron.StoreContract(ctx, neutronUser.KeyName(), "contracts/vectis_anoncreds_verifier.wasm")
+	codeId, err := neutron.StoreContract(
+		ctx,
+		neutronUser.KeyName(),
+		"contracts/vectis_anoncreds_verifier.wasm",
+	)
 	require.NoError(t, err, "code store err")
 
-	_, err = neutronNode.ExecTx(ctx, neutronUser.KeyName(), "wasm", "instantiate", codeId, "{}", "--label", "vectis-ssi", "--gas", "2000000", "--no-admin")
+	_, err = neutronNode.ExecTx(
+		ctx,
+		neutronUser.KeyName(),
+		"wasm",
+		"instantiate",
+		codeId,
+		"{}",
+		"--label",
+		"vectis-ssi",
+		"--gas",
+		"2000000",
+		"--no-admin",
+	)
 	require.NoError(t, err, "instantiate err")
 
 	stdout, _, err := neutronNode.ExecQuery(ctx, "wasm", "list-contract-by-code", codeId)
@@ -132,9 +151,21 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 		Version:        "cheqd-resource-v3",
 	}
 
-	err = r.GeneratePath(ctx, rep.RelayerExecReporter(t), "cheqd-mainnet-1", "neutron-mainnet-1", ssiPath)
+	err = r.GeneratePath(
+		ctx,
+		rep.RelayerExecReporter(t),
+		"cheqd-mainnet-1",
+		"neutron-mainnet-1",
+		ssiPath,
+	)
 	require.NoError(t, err, "generate path relayer err")
-	err = r.LinkPath(ctx, rep.RelayerExecReporter(t), ssiPath, createChannelOptions, ibc.DefaultClientOpts())
+	err = r.LinkPath(
+		ctx,
+		rep.RelayerExecReporter(t),
+		ssiPath,
+		createChannelOptions,
+		ibc.DefaultClientOpts(),
+	)
 	// These do not actually return error if they do not succeed in making the channel
 	require.NoError(t, err, "create channel relayer err")
 
@@ -147,12 +178,31 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	// ===================================
 	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
 	cheqdUser := cheqdUsers[0]
-	CreateAndUploadDid(t, ctx, "did_payload.json", "resource_payload.json", "revocationList", cheqd, cheqdUser, "5rjaLzcffhGUH4nt4fyfAg", "9fbb1b86-91f8-4942-97b9-725b7714131c")
+	CreateAndUploadDid(
+		t,
+		ctx,
+		"did_payload.json",
+		"resource_payload.json",
+		"revocationList",
+		cheqd,
+		cheqdUser,
+		"5rjaLzcffhGUH4nt4fyfAg",
+		"9fbb1b86-91f8-4942-97b9-725b7714131c",
+	)
 
 	// ============================================================
 	// Upload vectis-ssi contract on remote cosmwasm enabled chain
 	// ============================================================
-	_, err = neutron.ExecuteContract(ctx, neutronUser.KeyName(), contractAddr, fmt.Sprintf(`{"update_state": {"resource_id": "%s", "collection_id": "%s" }}`, TestResourceId, TestCollectionId))
+	_, err = neutron.ExecuteContract(
+		ctx,
+		neutronUser.KeyName(),
+		contractAddr,
+		fmt.Sprintf(
+			`{"update_state": {"resource_id": "%s", "collection_id": "%s" }}`,
+			TestResourceId,
+			TestCollectionId,
+		),
+	)
 	require.NoError(t, err, "exec error err")
 
 	height, err := neutron.Height(ctx)
@@ -168,18 +218,35 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	}
 
 	var queryData QueryResultResourceWithMetadata
-	query, err := json.Marshal(QueryMsg{QueryState: &QueryStateInput{ResourceId: TestResourceId, CollectionId: TestCollectionId}})
+	query, err := json.Marshal(
+		QueryMsg{
+			QueryState: &QueryStateInput{
+				ResourceId:   TestResourceId,
+				CollectionId: TestCollectionId,
+			},
+		},
+	)
 	require.NoError(t, err, "query parse err")
 
-	stdout, _, err = neutronNode.ExecQuery(ctx, "wasm", "contract-state", "smart", contractAddr, string(query))
+	stdout, _, err = neutronNode.ExecQuery(
+		ctx,
+		"wasm",
+		"contract-state",
+		"smart",
+		contractAddr,
+		string(query),
+	)
 	require.NoError(t, err, "exec err")
 
 	err = json.Unmarshal(stdout, &queryData)
 	require.NoError(t, err, "ack parse err")
 
-	resourceFromContract := strings.TrimFunc(string(queryData.Data.GetResource().GetData()), func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-	})
+	resourceFromContract := strings.TrimFunc(
+		string(queryData.Data.GetResource().GetData()),
+		func(r rune) bool {
+			return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+		},
+	)
 
 	content, err := os.ReadFile(fmt.Sprintf("%s/%s", "artifacts", "revocationList"))
 	originalResource := strings.TrimFunc(string(content), func(r rune) bool {

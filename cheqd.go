@@ -15,14 +15,34 @@ import (
 const TestResourceId = "9fbb1b86-91f8-4942-97b9-725b7714131c"
 const TestCollectionId = "5rjaLzcffhGUH4nt4fyfAg"
 
-func MustUploadPayload(ctx context.Context, filepath string, filename string, chain *cosmos.CosmosChain) error {
+func MustUploadPayload(
+	ctx context.Context,
+	filepath string,
+	filename string,
+	chain *cosmos.CosmosChain,
+) error {
 	content, err := os.ReadFile(fmt.Sprintf("%s/%s", filepath, filename))
-	str := fmt.Sprintf(`touch /var/cosmos-chain/cheqd/%s && echo '%s' > /var/cosmos-chain/cheqd/%s`, filename, string(content), filename)
+	str := fmt.Sprintf(
+		`touch /var/cosmos-chain/cheqd/%s && echo '%s' > /var/cosmos-chain/cheqd/%s`,
+		filename,
+		string(content),
+		filename,
+	)
 	_, _, err = chain.Exec(ctx, []string{"sh", "-c", str}, []string{})
 	return err
 }
 
-func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, resourcePayload string, resourceFile string, chain *cosmos.CosmosChain, user ibc.Wallet, collectionId string, resourceId string) []byte {
+func CreateAndUploadDid(
+	t *testing.T,
+	ctx context.Context,
+	didPayload string,
+	resourcePayload string,
+	resourceFile string,
+	chain *cosmos.CosmosChain,
+	user ibc.Wallet,
+	collectionId string,
+	resourceId string,
+) []byte {
 
 	err := MustUploadPayload(ctx, "artifacts", didPayload, chain)
 	require.NoError(t, err, "upload file err")
@@ -34,10 +54,31 @@ func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, re
 	chainNode := nodes[len(nodes)-1]
 
 	require.NoError(t, err, "upload file err")
-	_, err = chainNode.ExecTx(ctx, user.KeyName(), "cheqd", "create-did", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecTx(
+		ctx,
+		user.KeyName(),
+		"cheqd",
+		"create-did",
+		fmt.Sprintf("/var/cosmos-chain/cheqd/%s", didPayload),
+		"--gas",
+		"200000",
+		"--fees",
+		"50000000000ncheq",
+	)
 	require.NoError(t, err, "create-did err")
 
-	_, err = chainNode.ExecTx(ctx, user.KeyName(), "resource", "create", fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourcePayload), fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourceFile), "--gas", "200000", "--fees", "50000000000ncheq")
+	_, err = chainNode.ExecTx(
+		ctx,
+		user.KeyName(),
+		"resource",
+		"create",
+		fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourcePayload),
+		fmt.Sprintf("/var/cosmos-chain/cheqd/%s", resourceFile),
+		"--gas",
+		"200000",
+		"--fees",
+		"50000000000ncheq",
+	)
 	require.NoError(t, err, "create-resource err")
 
 	// Query onchain data
@@ -45,7 +86,13 @@ func CreateAndUploadDid(t *testing.T, ctx context.Context, didPayload string, re
 	require.NoError(t, err, "query-collection err")
 	require.NotNil(t, res1, "return collection err")
 
-	res1, _, err = chainNode.ExecQuery(ctx, "resource", "specific-resource", collectionId, resourceId)
+	res1, _, err = chainNode.ExecQuery(
+		ctx,
+		"resource",
+		"specific-resource",
+		collectionId,
+		resourceId,
+	)
 	require.NoError(t, err, "query-resource err")
 	require.NotNil(t, res1, "return resource err")
 	return (res1)
