@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCheqdV2StartAndUploadResource(t *testing.T) {
+func TestJunoStart(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("skipping in short mode")
@@ -25,33 +25,32 @@ func TestCheqdV2StartAndUploadResource(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount, fullnodeCount := 1, 1
 
-	ic, cheqd, _, _ := CreateCheqdChain(
+	ic, juno, _, _ := CreateJunoChain(
 		t,
 		ctx,
 		validatorsCount,
 		fullnodeCount,
-		//"sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2",
 	)
 	require.NotNil(t, ic)
-	require.NotNil(t, cheqd)
+	require.NotNil(t, juno)
 
 	const userFunds = int64(10_000_000_000_000)
-	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
-	cheqdUser := cheqdUsers[0]
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, juno)
+	user := users[0]
 
-	fmt.Println("cheqdUser: ", cheqdUser)
+	fmt.Println("user: ", user)
 
-	CreateAndUploadDid(
-		t,
-		ctx,
-		"did_payload.json",
-		"resource_payload.json",
-		"revocationList",
-		cheqd,
-		cheqdUser,
-		"5rjaLzcffhGUH4nt4fyfAg",
-		"9fbb1b86-91f8-4942-97b9-725b7714131c",
-	)
+	//CreateAndUploadDid(
+	//	t,
+	//	ctx,
+	//	"did_payload.json",
+	//	"resource_payload.json",
+	//	"revocationList",
+	//	cheqd,
+	//	cheqdUser,
+	//	"5rjaLzcffhGUH4nt4fyfAg",
+	//	"9fbb1b86-91f8-4942-97b9-725b7714131c",
+	//)
 
 	t.Cleanup(func() {
 		cancelFn()

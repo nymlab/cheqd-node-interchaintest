@@ -25,12 +25,7 @@ var (
 	MaxDepositPeriod = "10s"
 )
 
-func TestCheqdV2VectisIBC(t *testing.T) {
-	var (
-		chainName    = "cheqd"
-		cheqdVersion = "sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2"
-	)
-
+func TestCheqdV2AvidaIbc(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -39,26 +34,29 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
-			Name:        chainName,
-			ChainName:   chainName,
-			Version:     cheqdVersion,
+			Name:        "cheqd",
+			ChainName:   "cheqd",
+			Version:     "v2.0.1-arm64",
 			ChainConfig: GetCheqdConfig(),
+			NoHostMount: &[]bool{false}[0], // specify no mount
 		},
 		{
-			Name:        "neutron",
-			ChainName:   "neutron",
-			Version:     "v2.0.4",
-			ChainConfig: GetNeutronConfig()}})
+			Name:        "juno",
+			ChainName:   "juno",
+			Version:     "v22.0.0",
+			ChainConfig: GetJunoConfig(),
+			NoHostMount: &[]bool{false}[0], // specify no mount
+		}})
 
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
 	client, network := interchaintest.DockerSetup(t)
-	cheqd, neutron := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	cheqd, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	const (
-		ssiPath     = "ssi-cheqd-neutron-path"
-		path        = "cheqd-neutron-path"
+		ssiPath     = "ssi-cheqd-juno-path"
+		path        = "cheqd-juno-path"
 		relayerName = "relayer"
 	)
 
@@ -73,12 +71,12 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 
 	ic := interchaintest.NewInterchain().
 		AddChain(cheqd).
-		AddChain(neutron).
+		AddChain(juno).
 		AddRelayer(r, relayerName).
 		// The default is 'transfer' port on both end with unordered channel
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  cheqd,
-			Chain2:  neutron,
+			Chain2:  juno,
 			Relayer: r,
 			Path:    path,
 		})
@@ -102,23 +100,23 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	})
 
 	const userFunds = int64(10_000_000_000_000)
-	neutronUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, neutron)
-	neutronUser := neutronUsers[0]
-	neutronNode := neutron.FullNodes[0]
+	junoUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, juno)
+	junoUser := junoUsers[0]
+	junoNode := juno.FullNodes[0]
 
 	// ===================================
-	// neutron user upload and instantiate anoncreds contract
+	// juno user upload and instantiate anoncreds contract
 	// ===================================
-	codeId, err := neutron.StoreContract(
+	codeId, err := juno.StoreContract(
 		ctx,
-		neutronUser.KeyName(),
+		junoUser.KeyName(),
 		"contracts/vectis_anoncreds_verifier.wasm",
 	)
 	require.NoError(t, err, "code store err")
 
-	_, err = neutronNode.ExecTx(
+	_, err = junoNode.ExecTx(
 		ctx,
-		neutronUser.KeyName(),
+		junoUser.KeyName(),
 		"wasm",
 		"instantiate",
 		codeId,
@@ -131,7 +129,7 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	)
 	require.NoError(t, err, "instantiate err")
 
-	stdout, _, err := neutronNode.ExecQuery(ctx, "wasm", "list-contract-by-code", codeId)
+	stdout, _, err := junoNode.ExecQuery(ctx, "wasm", "list-contract-by-code", codeId)
 	require.NoError(t, err, "Query err")
 
 	contractsRes := QueryContractsByCodeResponse{}
@@ -155,7 +153,7 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 		ctx,
 		rep.RelayerExecReporter(t),
 		"cheqd-mainnet-1",
-		"neutron-mainnet-1",
+		"juno-mainnet-1",
 		ssiPath,
 	)
 	require.NoError(t, err, "generate path relayer err")
@@ -193,9 +191,9 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	// ============================================================
 	// Upload vectis-ssi contract on remote cosmwasm enabled chain
 	// ============================================================
-	_, err = neutron.ExecuteContract(
+	_, err = juno.ExecuteContract(
 		ctx,
-		neutronUser.KeyName(),
+		junoUser.KeyName(),
 		contractAddr,
 		fmt.Sprintf(
 			`{"update_state": {"resource_id": "%s", "collection_id": "%s" }}`,
@@ -205,12 +203,12 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	)
 	require.NoError(t, err, "exec error err")
 
-	height, err := neutron.Height(ctx)
+	height, err := juno.Height(ctx)
 	require.NoError(t, err, "error fetching height before flush")
 
 	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*12)
 	defer timeoutCtxCancel()
-	_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, neutron)
+	_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, juno)
 
 	for _, channel := range channelsCheqd {
 		// we do not check if flushing has error because channels can be for different paths
@@ -228,7 +226,7 @@ func TestCheqdV2VectisIBC(t *testing.T) {
 	)
 	require.NoError(t, err, "query parse err")
 
-	stdout, _, err = neutronNode.ExecQuery(
+	stdout, _, err = junoNode.ExecQuery(
 		ctx,
 		"wasm",
 		"contract-state",

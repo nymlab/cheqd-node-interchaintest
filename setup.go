@@ -2,9 +2,10 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	ibclocalhost "github.com/cosmos/ibc-go/v7/modules/light-clients/09-localhost"
 	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -17,6 +18,12 @@ import (
 
 	didtypes "github.com/cheqd/cheqd-node/x/did/types"
 	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
+
+	clocktypes "github.com/CosmosContracts/juno/v22/x/clock/types"
+	feepaytypes "github.com/CosmosContracts/juno/v22/x/feepay/types"
+	feesharetypes "github.com/CosmosContracts/juno/v22/x/feeshare/types"
+	globalfeetypes "github.com/CosmosContracts/juno/v22/x/globalfee/types"
+	tokenfactorytypes "github.com/CosmosContracts/juno/v22/x/tokenfactory/types"
 )
 
 func cheqdEncoding() *testutil.TestEncodingConfig {
@@ -32,10 +39,25 @@ const (
 	votingPeriod       = "10s"
 	maxDepositPeriod   = "10s"
 	cheqdDenom         = "ncheq"
-	neutronDenom       = "untrn"
+	junoDenom          = "ujuno"
 	haltHeightDelta    = uint64(20) // will propose upgrade this many blocks in the future
 	blocksAfterUpgrade = uint64(10)
 )
+
+func GetJunoEncoding() *testutil.TestEncodingConfig {
+	cfg := cosmos.DefaultEncoding()
+
+	// register custom types
+	ibclocalhost.RegisterInterfaces(cfg.InterfaceRegistry)
+	wasmtypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	feesharetypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	tokenfactorytypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	feepaytypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	globalfeetypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	clocktypes.RegisterInterfaces(cfg.InterfaceRegistry)
+
+	return &cfg
+}
 
 func GetCheqdConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
@@ -63,28 +85,28 @@ func GetCheqdConfig() ibc.ChainConfig {
 	}
 }
 
-func GetNeutronConfig() ibc.ChainConfig {
+func GetJunoConfig() ibc.ChainConfig {
 	return ibc.ChainConfig{
 		Type:    "cosmos",
-		Name:    "neutron",
-		ChainID: "neutron-mainnet-1",
+		Name:    "juno",
+		ChainID: "juno-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/strangelove-ventures/heighliner/neutron",
-				Version:    "v2.0.4",
+				Repository: "ghcr.io/cosmoscontracts/juno",
+				Version:    "v22.0.0",
 				UidGid:     "1025:1025",
 			},
 		},
-		Bin:                 "neutrond",
-		Bech32Prefix:        "neutron",
-		Denom:               neutronDenom,
+		Bin:                 "junod",
+		Bech32Prefix:        "juno",
+		Denom:               junoDenom,
 		CoinType:            "118",
-		GasPrices:           "50 untrn",
+		GasPrices:           "50 ujuno",
 		GasAdjustment:       1.3,
 		TrustingPeriod:      "508h",
 		NoHostMount:         false,
 		ConfigFileOverrides: nil,
-		EncodingConfig:      nil,
+		EncodingConfig:      GetJunoEncoding(),
 	}
 }
 
@@ -100,7 +122,7 @@ func CreateCheqdChain(
 			ChainName:     "cheqd",
 			Version:       "v2.0.1-arm64",
 			ChainConfig:   GetCheqdConfig(),
-			NoHostMount:   &[]bool{false}[0],
+			NoHostMount:   &[]bool{false}[0], // specify no mount
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
 		},
@@ -124,7 +146,46 @@ func CreateCheqdChain(
 		},
 	)
 
-	fmt.Print("building finished")
+	require.NoError(t, err)
+
+	return ic, chains[0].(*cosmos.CosmosChain), client, network
+}
+
+func CreateJunoChain(
+	t *testing.T,
+	ctx context.Context,
+	numVals, numFull int,
+) (*interchaintest.Interchain, *cosmos.CosmosChain, *client.Client, string) {
+
+	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
+		{
+			Name:          "juno",
+			ChainName:     "juno",
+			Version:       "v22.0.0",
+			ChainConfig:   GetJunoConfig(),
+			NoHostMount:   &[]bool{false}[0], // specify no mount
+			NumValidators: &numVals,
+			NumFullNodes:  &numFull,
+		},
+	})
+
+	chains, err := cf.Chains(t.Name())
+	require.NoError(t, err)
+
+	ic := interchaintest.NewInterchain().AddChain(chains[0])
+
+	client, network := interchaintest.DockerSetup(t)
+
+	err = ic.Build(
+		ctx,
+		testreporter.NewNopReporter().RelayerExecReporter(t),
+		interchaintest.InterchainBuildOptions{
+			TestName:         t.Name(),
+			Client:           client,
+			NetworkID:        network,
+			SkipPathCreation: true,
+		},
+	)
 
 	require.NoError(t, err)
 
