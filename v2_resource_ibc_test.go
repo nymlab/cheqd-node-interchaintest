@@ -10,6 +10,7 @@ import (
 	"time"
 	"unicode"
 
+	sdjwttypes "github.com/nymlab/cheqd-interchaintest/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -18,11 +19,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-)
-
-var (
-	VotingPeriod     = "15s"
-	MaxDepositPeriod = "10s"
 )
 
 func TestCheqdV2AvidaIbc(t *testing.T) {
@@ -105,14 +101,24 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	junoNode := juno.FullNodes[0]
 
 	// ===================================
-	// juno user upload and instantiate anoncreds contract
+	// juno user upload and instantiate sdjwt contract
 	// ===================================
 	codeId, err := juno.StoreContract(
 		ctx,
 		junoUser.KeyName(),
-		"contracts/vectis_anoncreds_verifier.wasm",
+		"contracts/avida_sdjwt_verifier-aarch64.wasm",
 	)
 	require.NoError(t, err, "code store err")
+
+	var initRegistration []sdjwttypes.InitRegistration
+	var initMsg sdjwttypes.InstantiateMsg
+
+	initMsg = sdjwttypes.InstantiateMsg{
+		InitRegistrations:  initRegistration,
+		MaxPresentationLen: 30000,
+	}
+
+	initMsgBytes, err := json.Marshal(initMsg)
 
 	_, err = junoNode.ExecTx(
 		ctx,
@@ -120,9 +126,9 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		"wasm",
 		"instantiate",
 		codeId,
-		"{}",
+		string(initMsgBytes),
 		"--label",
-		"vectis-ssi",
+		"avida-sdjwt",
 		"--gas",
 		"2000000",
 		"--no-admin",
@@ -180,8 +186,8 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		t,
 		ctx,
 		"did_payload.json",
-		"resource_payload.json",
-		"revocationList",
+		"resource_payload_no_data.json",
+		"jwk.json",
 		cheqd,
 		cheqdUser,
 		"5rjaLzcffhGUH4nt4fyfAg",
@@ -189,7 +195,7 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	)
 
 	// ============================================================
-	// Upload vectis-ssi contract on remote cosmwasm enabled chain
+	// Upload sdjwt verifier contract on remote cosmwasm enabled chain
 	// ============================================================
 	_, err = juno.ExecuteContract(
 		ctx,
