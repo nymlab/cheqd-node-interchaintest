@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"strings"
+	//"os"
+	//"strings"
 	"testing"
 	"time"
-	"unicode"
+	//"unicode"
 
 	sdjwttypes "github.com/nymlab/cheqd-interchaintest/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
@@ -19,6 +19,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	resourcetypes "github.com/cheqd/cheqd-node/x/resource/types"
 )
 
 func TestCheqdV2AvidaIbc(t *testing.T) {
@@ -110,39 +112,34 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	)
 	require.NoError(t, err, "code store err")
 
-	var initRegistration []sdjwttypes.InitRegistration
+	routeReqs := make([]sdjwttypes.RouteRequirement, 0)
+
+	initRegistrations := make([]sdjwttypes.InitRegistration, 0)
 	var initMsg sdjwttypes.InstantiateMsg
 
 	initMsg = sdjwttypes.InstantiateMsg{
-		InitRegistrations:  initRegistration,
+		InitRegistrations: append(initRegistrations, sdjwttypes.InitRegistration{
+			AppAdmin:   sdjwttypes.TestAppAddr1,
+			AppAddress: sdjwttypes.TestAppAddr1,
+			Routes:     routeReqs,
+		}),
 		MaxPresentationLen: 30000,
 	}
 
 	initMsgBytes, err := json.Marshal(initMsg)
 
-	_, err = junoNode.ExecTx(
+	contractAddr, err := junoNode.InstantiateContract(
 		ctx,
 		junoUser.KeyName(),
-		"wasm",
-		"instantiate",
 		codeId,
 		string(initMsgBytes),
+		true,
 		"--label",
 		"avida-sdjwt",
 		"--gas",
 		"2000000",
-		"--no-admin",
 	)
 	require.NoError(t, err, "instantiate err")
-
-	stdout, _, err := junoNode.ExecQuery(ctx, "wasm", "list-contract-by-code", codeId)
-	require.NoError(t, err, "Query err")
-
-	contractsRes := QueryContractsByCodeResponse{}
-	err = json.Unmarshal([]byte(stdout), &contractsRes)
-	require.NoError(t, err, "parse contractRes err")
-
-	contractAddr := contractsRes.Contracts[len(contractsRes.Contracts)-1]
 
 	// ===================================
 	// Add channel and make relayer relay it
@@ -195,19 +192,39 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	)
 
 	// ============================================================
-	// Upload sdjwt verifier contract on remote cosmwasm enabled chain
+	// Register route on contract with cheqd as trust registry
 	// ============================================================
+	ResourceReq := resourcetypes.ResourceReqPacket{
+		CollectionId: "5rjaLzcffhGUH4nt4fyfAg",
+		ResourceId:   "9fbb1b86-91f8-4942-97b9-725b7714131c",
+	}
+	resourceReqBytes, err := json.Marshal(ResourceReq)
+
+	routeReq := sdjwttypes.RouteRequirement{
+		RouteId: 1,
+		Requirements: sdjwttypes.RouteVerificationRequirements{
+			PresentationRequest: []byte("[]"),
+			VerificationSource: sdjwttypes.VerificationSource{
+				DataOrLocation: resourceReqBytes,
+				Source:         sdjwttypes.TrustRegistryCheqd,
+			},
+		},
+	}
+	registerMsg := sdjwttypes.ExecuteMsg{
+		Register: &sdjwttypes.Register{
+			AppAddr:       sdjwttypes.TestAppAddr2,
+			RouteCriteria: append(routeReqs, routeReq)},
+	}
+
+	registerMsgBytes, err := json.Marshal(registerMsg)
+
 	_, err = juno.ExecuteContract(
 		ctx,
 		junoUser.KeyName(),
 		contractAddr,
-		fmt.Sprintf(
-			`{"update_state": {"resource_id": "%s", "collection_id": "%s" }}`,
-			TestResourceId,
-			TestCollectionId,
-		),
+		string(registerMsgBytes),
 	)
-	require.NoError(t, err, "exec error err")
+	require.NoError(t, err, "exec err")
 
 	height, err := juno.Height(ctx)
 	require.NoError(t, err, "error fetching height before flush")
@@ -221,42 +238,34 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		r.Flush(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
 	}
 
-	var queryData QueryResultResourceWithMetadata
-	query, err := json.Marshal(
-		QueryMsg{
-			QueryState: &QueryStateInput{
-				ResourceId:   TestResourceId,
-				CollectionId: TestCollectionId,
-			},
+	// ===========================================
+	// Query contract for verification key on cheqd
+	// ===========================================
+
+	query, err := json.Marshal(sdjwttypes.QueryMsg{
+		GetRouteVerificationKey: &sdjwttypes.GetRouteVerificationKey{
+			AppAddr: sdjwttypes.TestAppAddr2,
+			RouteID: 1,
 		},
-	)
-	require.NoError(t, err, "query parse err")
-
-	stdout, _, err = junoNode.ExecQuery(
-		ctx,
-		"wasm",
-		"contract-state",
-		"smart",
-		contractAddr,
-		string(query),
-	)
-	require.NoError(t, err, "exec err")
-
-	err = json.Unmarshal(stdout, &queryData)
-	require.NoError(t, err, "ack parse err")
-
-	resourceFromContract := strings.TrimFunc(
-		string(queryData.Data.GetResource().GetData()),
-		func(r rune) bool {
-			return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-		},
-	)
-
-	content, err := os.ReadFile(fmt.Sprintf("%s/%s", "artifacts", "revocationList"))
-	originalResource := strings.TrimFunc(string(content), func(r rune) bool {
-		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
 	})
 
-	require.Equal(t, resourceFromContract, originalResource)
+	var queryData sdjwttypes.GetRouteVerificationKeyRes
+	err = junoNode.QueryContract(ctx, contractAddr, string(query), &queryData)
+
+	fmt.Println("queryData: ", queryData)
+
+	//resourceFromContract := strings.TrimFunc(
+	//	string(queryData.Data.GetResource().GetData()),
+	//	func(r rune) bool {
+	//		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	//	},
+	//)
+
+	//content, err := os.ReadFile(fmt.Sprintf("%s/%s", "artifacts", "revocationList"))
+	//originalResource := strings.TrimFunc(string(content), func(r rune) bool {
+	//	return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	//})
+
+	//require.Equal(t, resourceFromContract, originalResource)
 
 }

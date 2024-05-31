@@ -124,13 +124,11 @@ func TestJunoStart(t *testing.T) {
 		},
 	)
 
-	var queryData any
+	var queryData sdjwttypes.GetRoutesRes
 	err = junoNode.QueryContract(ctx, contractAddr, string(query), &queryData)
-
-	fmt.Println("queryData: ", queryData)
-	//require.NoError(t, err, "exec err")
-	//require.Len(t, queryData, 1, "route length mismatch")
-	//require.Equal(t, queryData[0], 1, "RouteId mismatch")
+	require.NoError(t, err, "exec err")
+	require.Len(t, queryData.Data, 1, "route length mismatch")
+	require.Equal(t, uint64(0x1), queryData.Data[0], "RouteId mismatch")
 
 	t.Cleanup(func() {
 		cancelFn()

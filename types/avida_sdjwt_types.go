@@ -23,10 +23,10 @@ type RouteVerificationRequirements struct {
 
 type Binary []byte
 
-type TrustRegistry int
+type TrustRegistry string
 
 const (
-	TrustRegistryCheqd TrustRegistry = 1
+	TrustRegistryCheqd TrustRegistry = "cheqd"
 )
 
 type VerificationSource struct {
@@ -75,7 +75,7 @@ type QueryMsg struct {
 
 // In rust: Vec<RouteId>
 type GetRoutesRes struct {
-	Data *[]uint64 `json:"data"`
+	Data []uint64 `json:"data"`
 }
 type GetRoutes struct {
 	AppAddr string `json:"app_addr,omitempty"`
@@ -86,6 +86,10 @@ type GetRouteRequirements struct {
 	RouteID uint64 `json:"route_id,omitempty"`
 }
 
+// In rust: Vec<RouteId>
+type GetRouteVerificationKeyRes struct {
+	Data string `json:"data"`
+}
 type GetRouteVerificationKey struct {
 	AppAddr string `json:"app_addr,omitempty"`
 	RouteID uint64 `json:"route_id,omitempty"`
