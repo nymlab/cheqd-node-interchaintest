@@ -4,11 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	//"os"
-	//"strings"
 	"testing"
-	"time"
-	//"unicode"
 
 	sdjwttypes "github.com/nymlab/cheqd-interchaintest/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
@@ -24,10 +20,6 @@ import (
 )
 
 func TestCheqdV2AvidaIbc(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
 	t.Parallel()
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
@@ -51,12 +43,6 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 
 	client, network := interchaintest.DockerSetup(t)
 	cheqd, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
-
-	const (
-		ssiPath     = "ssi-cheqd-juno-path"
-		path        = "cheqd-juno-path"
-		relayerName = "relayer"
-	)
 
 	// Get a relayer instance
 	rf := interchaintest.NewBuiltinRelayerFactory(
@@ -97,10 +83,26 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		_ = ic.Close()
 	})
 
-	const userFunds = int64(10_000_000_000_000)
 	junoUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, juno)
 	junoUser := junoUsers[0]
 	junoNode := juno.FullNodes[0]
+
+	// ===================================
+	// cheqd user create resource
+	// ===================================
+	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
+	cheqdUser := cheqdUsers[0]
+	CreateAndUploadDid(
+		t,
+		ctx,
+		"did_payload.json",
+		"resource_payload_no_data.json",
+		"jwk.json",
+		cheqd,
+		cheqdUser,
+		collectionId,
+		resourceId,
+	)
 
 	// ===================================
 	// juno user upload and instantiate sdjwt contract
@@ -108,7 +110,7 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	codeId, err := juno.StoreContract(
 		ctx,
 		junoUser.KeyName(),
-		"contracts/avida_sdjwt_verifier-aarch64.wasm",
+		contractPath,
 	)
 	require.NoError(t, err, "code store err")
 
@@ -141,9 +143,9 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	)
 	require.NoError(t, err, "instantiate err")
 
-	// ===================================
+	// ======================================
 	// Add channel and make relayer relay it
-	// ===================================
+	// ======================================
 
 	createChannelOptions := ibc.CreateChannelOptions{
 		SourcePortName: "cheqdresource",
@@ -172,35 +174,17 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 
 	// Ensure channels are created successfully
 	channelsCheqd, err := r.GetChannels(ctx, rep.RelayerExecReporter(t), "cheqd-mainnet-1")
-
-	fmt.Println("!!!!channelsCheqd: ", channelsCheqd)
 	require.Len(t, channelsCheqd, 2)
 
-	testutil.WaitForBlocks(ctx, 3, juno)
-
-	// ===================================
-	// cheqd user create resource
-	// ===================================
-	cheqdUsers := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, cheqd)
-	cheqdUser := cheqdUsers[0]
-	CreateAndUploadDid(
-		t,
-		ctx,
-		"did_payload.json",
-		"resource_payload_no_data.json",
-		"jwk.json",
-		cheqd,
-		cheqdUser,
-		"5rjaLzcffhGUH4nt4fyfAg",
-		"9fbb1b86-91f8-4942-97b9-725b7714131c",
-	)
+	err = testutil.WaitForBlocks(ctx, 5, juno, cheqd)
+	require.NoError(t, err, "wait for blocks err")
 
 	// ============================================================
 	// Register route on contract with cheqd as trust registry
 	// ============================================================
 	ResourceReq := resourcetypes.ResourceReqPacket{
-		CollectionId: "5rjaLzcffhGUH4nt4fyfAg",
-		ResourceId:   "9fbb1b86-91f8-4942-97b9-725b7714131c",
+		CollectionId: collectionId,
+		ResourceId:   resourceId,
 	}
 	resourceReqBytes, err := json.Marshal(ResourceReq)
 
@@ -230,22 +214,24 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	)
 	require.NoError(t, err, "exec err")
 
-	height, err := juno.Height(ctx)
-	require.NoError(t, err, "error fetching height before flush")
-
-	timeoutCtx, timeoutCtxCancel := context.WithTimeout(ctx, time.Second*12)
-	defer timeoutCtxCancel()
-	_ = testutil.WaitForBlocks(timeoutCtx, int(height)+3, juno)
+	err = testutil.WaitForBlocks(ctx, 5, juno, cheqd)
+	require.NoError(t, err, "wait for blocks err")
 
 	for _, channel := range channelsCheqd {
-		// we do not check if flushing has error because channels can be for different paths
 		r.Flush(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
 	}
 
-	// ===========================================
-	// Query contract for verification key on cheqd
-	// ===========================================
+	err = testutil.WaitForBlocks(ctx, 10, juno, cheqd)
+	require.NoError(t, err, "wait for blocks err")
 
+	for _, channel := range channelsCheqd {
+		r.Flush(ctx, rep.RelayerExecReporter(t), ssiPath, channel.ChannelID)
+	}
+
+	// =================================================
+	// Query contract for verification key
+	// This is retrieved from IBC tx on cheqe x/resource
+	// =================================================
 	query, err := json.Marshal(sdjwttypes.QueryMsg{
 		GetRouteVerificationKey: &sdjwttypes.GetRouteVerificationKey{
 			AppAddr: sdjwttypes.TestAppAddr2,
@@ -253,25 +239,14 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		},
 	})
 
-	testutil.WaitForBlocks(ctx, 3, cheqd)
-	testutil.WaitForBlocks(ctx, 3, juno)
-
 	var queryData sdjwttypes.GetRouteVerificationKeyRes
 	err = junoNode.QueryContract(ctx, contractAddr, string(query), &queryData)
 
-	fmt.Println("!!!queryData: ", queryData)
+	var originalJwk sdjwttypes.OkpJwk
+	var returnedJwk sdjwttypes.OkpJwk
 
-	//resourceFromContract := strings.TrimFunc(
-	//	string(queryData.Data.GetResource().GetData()),
-	//	func(r rune) bool {
-	//		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-	//	},
-	//)
+	err = json.Unmarshal(jwk, &originalJwk)
+	err = json.Unmarshal([]byte(queryData.Data), &returnedJwk)
 
-	//content, err := os.ReadFile(fmt.Sprintf("%s/%s", "artifacts", "revocationList"))
-	//originalResource := strings.TrimFunc(string(content), func(r rune) bool {
-	//	return !unicode.IsLetter(r) && !unicode.IsNumber(r)
-	//})
-
-	//require.Equal(t, resourceFromContract, originalResource)
+	require.Equal(t, originalJwk, returnedJwk)
 }

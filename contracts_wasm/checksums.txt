@@ -1,0 +1,1 @@
+2b2b15f3d4cea85a50b8bda772ad6be2328924b667e14eb0165aa1f5fd41b195  avida_sdjwt_verifier-aarch64.wasm

@@ -2,6 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
+	_ "embed"
 	"testing"
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -35,11 +36,21 @@ func cheqdEncoding() *testutil.TestEncodingConfig {
 	return &cfg
 }
 
+//go:embed artifacts/jwk.json
+var jwk []byte
+
 const (
+	userFunds          = int64(10_000_000_000_000)
 	cheqdDenom         = "ncheq"
 	junoDenom          = "ujuno"
 	haltHeightDelta    = uint64(20) // will propose upgrade this many blocks in the future
 	blocksAfterUpgrade = uint64(10)
+	ssiPath            = "ssi-cheqd-juno-path"
+	path               = "cheqd-juno-path"
+	relayerName        = "relayer"
+	collectionId       = "5rjaLzcffhGUH4nt4fyfAg"
+	resourceId         = "9fbb1b86-91f8-4942-97b9-725b7714131c"
+	contractPath       = "contracts_wasm/avida_sdjwt_verifier.wasm"
 )
 
 func GetJunoEncoding() *testutil.TestEncodingConfig {

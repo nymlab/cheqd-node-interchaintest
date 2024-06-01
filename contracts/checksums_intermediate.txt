@@ -1,1 +1,0 @@
-4ddbe635c41f61cea89280918acfe1a7b427405dd9acba373f0c67281b4481f5  target/wasm32-unknown-unknown/release/vectis_anoncreds_verifier.wasm

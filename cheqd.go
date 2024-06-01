@@ -12,9 +12,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
-const TestResourceId = "9fbb1b86-91f8-4942-97b9-725b7714131c"
-const TestCollectionId = "5rjaLzcffhGUH4nt4fyfAg"
-
 func MustUploadPayload(
 	ctx context.Context,
 	filepath string,

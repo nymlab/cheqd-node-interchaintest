@@ -11,13 +11,14 @@ import (
 )
 
 func TestJsonparse(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
 	t.Parallel()
 
-	payloadJSON, _, err := cheqdCli.ReadPayloadWithSignInputsFromFile("artifacts/resource_payload.json")
+	payloadJSON, _, err := cheqdCli.ReadPayloadWithSignInputsFromFile(
+		"artifacts/resource_payload.json",
+	)
 
 	// Unmarshal payload
 	var payload resourcetypes.MsgCreateResourcePayload

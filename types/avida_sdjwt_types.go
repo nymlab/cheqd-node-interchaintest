@@ -86,9 +86,9 @@ type GetRouteRequirements struct {
 	RouteID uint64 `json:"route_id,omitempty"`
 }
 
-// In rust: Vec<RouteId>
+// In rust: Option<String> of JwK
 type GetRouteVerificationKeyRes struct {
-	Data string `json:"data"`
+	Data string `json:"data,omitempty"`
 }
 type GetRouteVerificationKey struct {
 	AppAddr string `json:"app_addr,omitempty"`

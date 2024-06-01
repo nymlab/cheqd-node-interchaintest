@@ -2,9 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
-	_ "embed"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	sdjwttypes "github.com/nymlab/cheqd-interchaintest/types"
@@ -12,11 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//go:embed jwk.json
-var jwk []byte
-
 func TestJunoStart(t *testing.T) {
-
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -40,11 +34,8 @@ func TestJunoStart(t *testing.T) {
 	require.NotNil(t, ic)
 	require.NotNil(t, juno)
 
-	const userFunds = int64(10_000_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, juno)
 	user := users[0]
-
-	fmt.Println("user: ", user)
 
 	// ===================================
 	// juno user upload and instantiate sdjwt contract
@@ -52,7 +43,7 @@ func TestJunoStart(t *testing.T) {
 	codeId, err := juno.StoreContract(
 		ctx,
 		user.KeyName(),
-		"contracts/avida_sdjwt_verifier-aarch64.wasm",
+		contractPath,
 	)
 	require.NoError(t, err, "code store err")
 
@@ -129,6 +120,24 @@ func TestJunoStart(t *testing.T) {
 	require.NoError(t, err, "exec err")
 	require.Len(t, queryData.Data, 1, "route length mismatch")
 	require.Equal(t, uint64(0x1), queryData.Data[0], "RouteId mismatch")
+
+	queryKey, err := json.Marshal(sdjwttypes.QueryMsg{
+		GetRouteVerificationKey: &sdjwttypes.GetRouteVerificationKey{
+			AppAddr: sdjwttypes.TestAppAddr2,
+			RouteID: 1,
+		},
+	})
+
+	var queryKeyData sdjwttypes.GetRouteVerificationKeyRes
+	err = junoNode.QueryContract(ctx, contractAddr, string(queryKey), &queryKeyData)
+
+	var originalJwk sdjwttypes.OkpJwk
+	var returnedJwk sdjwttypes.OkpJwk
+
+	err = json.Unmarshal(jwk, &originalJwk)
+	err = json.Unmarshal([]byte(queryKeyData.Data), &returnedJwk)
+
+	require.Equal(t, originalJwk, returnedJwk)
 
 	t.Cleanup(func() {
 		cancelFn()
