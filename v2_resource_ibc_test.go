@@ -172,7 +172,11 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 
 	// Ensure channels are created successfully
 	channelsCheqd, err := r.GetChannels(ctx, rep.RelayerExecReporter(t), "cheqd-mainnet-1")
+
+	fmt.Println("!!!!channelsCheqd: ", channelsCheqd)
 	require.Len(t, channelsCheqd, 2)
+
+	testutil.WaitForBlocks(ctx, 3, juno)
 
 	// ===================================
 	// cheqd user create resource
@@ -249,10 +253,13 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 		},
 	})
 
+	testutil.WaitForBlocks(ctx, 3, cheqd)
+	testutil.WaitForBlocks(ctx, 3, juno)
+
 	var queryData sdjwttypes.GetRouteVerificationKeyRes
 	err = junoNode.QueryContract(ctx, contractAddr, string(query), &queryData)
 
-	fmt.Println("queryData: ", queryData)
+	fmt.Println("!!!queryData: ", queryData)
 
 	//resourceFromContract := strings.TrimFunc(
 	//	string(queryData.Data.GetResource().GetData()),
@@ -267,5 +274,4 @@ func TestCheqdV2AvidaIbc(t *testing.T) {
 	//})
 
 	//require.Equal(t, resourceFromContract, originalResource)
-
 }

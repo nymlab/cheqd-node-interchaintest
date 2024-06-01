@@ -36,8 +36,6 @@ func cheqdEncoding() *testutil.TestEncodingConfig {
 }
 
 const (
-	votingPeriod       = "10s"
-	maxDepositPeriod   = "10s"
 	cheqdDenom         = "ncheq"
 	junoDenom          = "ujuno"
 	haltHeightDelta    = uint64(20) // will propose upgrade this many blocks in the future
