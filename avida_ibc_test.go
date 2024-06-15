@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"testing"
 
 	sdjwttypes "github.com/nymlab/cheqd-interchaintest/types"
@@ -22,12 +23,23 @@ import (
 func TestCheqdV2AvidaIbc(t *testing.T) {
 	t.Parallel()
 
+	var cheqd_version string
+	var repository string
+
+	if runtime.GOARCH == "arm64" {
+		cheqd_version = "v2.0.1-arm64"
+		repository = "ghcr.io/nymlab/cheqd-node"
+	} else {
+		cheqd_version = "sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2"
+		repository = "ghcr.io/cheqd/cheqd-node"
+	}
+
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:        "cheqd",
 			ChainName:   "cheqd",
-			Version:     "v2.0.1-arm64",
-			ChainConfig: GetCheqdConfig(),
+			Version:     cheqd_version,
+			ChainConfig: GetCheqdConfig(cheqd_version, repository),
 			NoHostMount: &[]bool{false}[0], // specify no mount
 		},
 		{

@@ -22,6 +22,9 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.22'
-
+        
+    - name: Build contracts
+      run: make build-contracts
+      
     - name: Test
       run: go test -v ./...

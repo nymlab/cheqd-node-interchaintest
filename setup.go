@@ -68,16 +68,16 @@ func GetJunoEncoding() *testutil.TestEncodingConfig {
 	return &cfg
 }
 
-func GetCheqdConfig() ibc.ChainConfig {
+func GetCheqdConfig(cheqd_version string, repository string) ibc.ChainConfig {
 	return ibc.ChainConfig{
 		Type:    "cosmos",
 		Name:    "cheqd",
 		ChainID: "cheqd-mainnet-1",
 		Images: []ibc.DockerImage{
 			{
-				Repository: "ghcr.io/nymlab/cheqd-node", // FOR LOCAL IMAGE USE: Docker Image Name
+				Repository: repository, // FOR LOCAL IMAGE USE: Docker Image Name
 				//Repository: "ghcr.io/strangelove-ventures/heighliner/cheqd", // FOR LOCAL IMAGE USE: Docker Image Name
-				Version: "v2.0.1-arm64", // FOR LOCAL IMAGE USE: Docker Image Tag
+				Version: cheqd_version, // FOR LOCAL IMAGE USE: Docker Image Tag
 				UidGid:  "1000:1000",
 			},
 		},
@@ -123,14 +123,16 @@ func CreateCheqdChain(
 	t *testing.T,
 	ctx context.Context,
 	numVals, numFull int,
+	cheqd_version string,
+	repository string,
 ) (*interchaintest.Interchain, *cosmos.CosmosChain, *client.Client, string) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "cheqd",
 			ChainName:     "cheqd",
-			Version:       "v2.0.1-arm64",
-			ChainConfig:   GetCheqdConfig(),
+			Version:       cheqd_version,
+			ChainConfig:   GetCheqdConfig(cheqd_version, repository),
 			NoHostMount:   &[]bool{false}[0], // specify no mount
 			NumValidators: &numVals,
 			NumFullNodes:  &numFull,
