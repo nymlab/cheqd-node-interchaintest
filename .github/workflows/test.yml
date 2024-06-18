@@ -24,10 +24,7 @@ jobs:
         go-version: '1.22'
 
     - name: Build contracts
-      run: cd contracts; make build; cd ..
-
-    - name: Move contracts
-      run: sudo make move-contracts
+      run: sudo make build-contracts
       
     - name: Test
       run: go test -v ./...

@@ -1,13 +1,14 @@
 ###########################
-###   Move contracts   ###
+###   Build contracts   ###
 ###########################
 
 #!/bin/bash
 
 UNAMEP := $(shell uname -p)
-move-contracts:
+build-contracts:
 	echo $(UNAMEP)
 	mkdir -p contracts_wasm
+	cd contracts; make build; cd ..
 	for file in ./contracts/artifacts/*; do \
 		if [ $(UNAMEP) = arm ]; then \
 			echo "$$file"; \
