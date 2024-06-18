@@ -2,6 +2,7 @@ package cheqd_interchaintest
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v7"
@@ -22,11 +23,24 @@ func TestCheqdV2UploadResource(t *testing.T) {
 	// create a single chain instance with x validators
 	validatorsCount, fullnodeCount := 1, 1
 
+	var cheqd_version string
+	var repository string
+
+	if runtime.GOARCH == "arm64" {
+		cheqd_version = "v2.0.1-arm64"
+		repository = "ghcr.io/nymlab/cheqd-node"
+	} else {
+		cheqd_version = "sha-fdf3b2cb9bef2ee518f46e299eee97b4c4082ff2"
+		repository = "ghcr.io/cheqd/cheqd-node"
+	}
+
 	ic, cheqd, _, _ := CreateCheqdChain(
 		t,
 		ctx,
 		validatorsCount,
 		fullnodeCount,
+		cheqd_version,
+		repository,
 	)
 	require.NotNil(t, ic)
 	require.NotNil(t, cheqd)

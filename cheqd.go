@@ -42,6 +42,7 @@ func CreateAndUploadDid(
 ) []byte {
 
 	err := MustUploadPayload(ctx, "artifacts", didPayload, chain)
+
 	require.NoError(t, err, "upload file err")
 	err = MustUploadPayload(ctx, "artifacts", resourcePayload, chain)
 	require.NoError(t, err, "upload file err")
