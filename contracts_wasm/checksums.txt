@@ -1,1 +1,0 @@
-2fc7f6beadeb4243d0a36927c3a00f985c8000bd99cede6bb7ab64c3fc193019  avida_sdjwt_verifier.wasm
