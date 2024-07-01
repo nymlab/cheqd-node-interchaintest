@@ -17,7 +17,7 @@ func TestJsonparse(t *testing.T) {
 	t.Parallel()
 
 	payloadJSON, _, err := cheqdCli.ReadPayloadWithSignInputsFromFile(
-		"artifacts/resource_payload.json",
+		"artifacts/resource_payload_no_data.json",
 	)
 
 	// Unmarshal payload
